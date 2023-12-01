@@ -1,0 +1,17 @@
+{
+    "name": "lucifier/framework",
+    "description": "Telegram bot framework for php",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Lucifier\\Framework\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "LucifierArchangel"
+        }
+    ],
+    "minimum-stability": "dev"
+}
