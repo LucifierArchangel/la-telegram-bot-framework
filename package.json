@@ -1,0 +1,20 @@
+{
+    "name": "la-telegram-bot-framework",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "php:doc": "docker run --rm -v .:/data phpdoc/phpdoc:3"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/LucifierArchangel/la-telegram-bot-framework.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/LucifierArchangel/la-telegram-bot-framework/issues"
+    },
+    "homepage": "https://github.com/LucifierArchangel/la-telegram-bot-framework#readme"
+}
