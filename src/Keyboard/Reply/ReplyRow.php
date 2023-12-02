@@ -2,23 +2,39 @@
 
     namespace Lucifier\Framework\Keyboard\Reply;
 
+    /**
+     * Simple reply keyboard row abstraction
+     */
     class ReplyRow {
-        private $buttons;
+        /**
+         * @var array array of reply buttons
+         */
+        private array $buttons;
 
+        /**
+         * Constructor
+         */
         public function __construct() {
             $this->buttons = array();
         }
 
-        public function addButton($text="Reply Button Example") {
-            array_push($this->buttons, new ReplyButton($text));
+        /**
+         * @param string $text reply button text
+         * @return $this
+         */
+        public function addButton(string $text="Reply Button Example"): static {
+            $this->buttons[] = new ReplyButton($text);
 
             return $this;
         }
 
-        public function build() {
+        /**
+         * @return array array of reply buttons row
+         */
+        public function build(): array {
             $result = array();
             foreach ($this->buttons as $button) {
-                array_push($result, $button->build());
+                $result[] = $button->build();
             }
 
             return $result;

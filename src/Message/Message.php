@@ -2,11 +2,26 @@
 
     namespace Lucifier\Framework\Message;
 
+    /**
+     * Simple message builder with simple template engine
+     */
     class Message {
-        public $fields = array();
-        public $template = "";
+        /**
+         * @var array array of field's names for template engine
+         */
+        private array $fields = array();
 
-        private function checkData($data) {
+        /**
+         * @var string message template
+         */
+        private string $template = "";
+
+        /**
+         * Validating data against specified fields
+         * @param $data array key:value array of data for message templating
+         * @return bool       validation result
+         */
+        private function checkData(array $data): bool {
             foreach ($this->fields as $field) {
                 if (!array_key_exists($field, $data)) {
                     return false;
@@ -16,7 +31,12 @@
             return true;
         }
 
-        private function compile($data) {
+        /**
+         * Compile template
+         * @param $data array key:value array of data for message templating
+         * @return void
+         */
+        private function compile(array $data): void {
             preg_match_all('~\{{\s*(.+?)\s*\}}~is', $this->template, $matches, PREG_SET_ORDER);
 
             foreach ($matches as $match) {
@@ -24,12 +44,19 @@
             }
         }
 
-        public function run($data=array()) {
+        /**
+         * Data validation and template compilation
+         * @param $data array key:value array of data for message templating
+         * @return string     compilation result
+         */
+        public function run(array $data=array()): string {
             if ($this->checkData($data)) {
                 $this->compile($data);
 
-                echo $this->template;
+                return $this->template;
             }
+
+            return "";
         }
     }
 

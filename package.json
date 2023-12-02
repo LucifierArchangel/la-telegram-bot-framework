@@ -4,7 +4,9 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "php:doc": "docker run --rm -v .:/data phpdoc/phpdoc:3"
+        "php:doc": "docker run --rm -v .:/data phpdoc/phpdoc:3",
+        "php:doc_serve": "npx serve .phpdoc/build",
+        "php:view_doc": "npm run php:doc && npm run php:doc_serve"
     },
     "repository": {
         "type": "git",

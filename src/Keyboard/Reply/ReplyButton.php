@@ -2,14 +2,26 @@
 
     namespace Lucifier\Framework\Keyboard\Reply;
 
+    /**
+     * Simple reply button constructor
+     */
     class ReplyButton {
-        protected $text;
+        /**
+         * @var mixed|string reply button text
+         */
+        protected string $text;
 
-        public function __construct($text="Reply Button Example") {
+        /**
+         * @param $text string reply button string
+         */
+        public function __construct(string $text="Reply Button Example") {
             $this->text = $text;
         }
 
-        public function build() {
+        /**
+         * @return array|string[] button array view
+         */
+        public function build(): array {
             return ['text' => $this->text];
         }
     }

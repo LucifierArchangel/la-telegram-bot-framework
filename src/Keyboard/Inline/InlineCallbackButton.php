@@ -2,16 +2,34 @@
 
     namespace Lucifier\Framework\Keyboard\Inline;
 
+    /**
+     * Simple callback inline button
+     */
     class InlineCallbackButton {
-        private $text;
-        private $callback;
+        /**
+         * @var string inline button text
+         */
+        private string $text;
 
-        public function __construct($text, $callback) {
+        /**
+         * @var string inline button callback
+         */
+        private string $callback;
+
+        /**
+         * @param string $text      inline button text
+         * @param string $callback  inline button callback
+         */
+        public function __construct(string $text, string $callback) {
             $this->text = $text;
             $this->callback = $callback;
         }
 
-        public function build() {
+        /**
+         * Build button array
+         * @return array
+         */
+        public function build(): array {
             return ['text' => $this->text, 'callback' => $this->callback];
         }
     }
