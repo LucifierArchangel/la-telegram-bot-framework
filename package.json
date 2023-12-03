@@ -6,7 +6,8 @@
     "scripts": {
         "php:doc": "docker run --rm -v .:/data phpdoc/phpdoc:3",
         "php:doc_serve": "npx serve .phpdoc/build",
-        "php:view_doc": "npm run php:doc && npm run php:doc_serve"
+        "php:view_doc": "npm run php:doc && npm run php:doc_serve",
+        "php:analyze": "vendor/bin/phpstan analyse -l 5 -c phpstan.neon ./src/"
     },
     "repository": {
         "type": "git",

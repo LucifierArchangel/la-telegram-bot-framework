@@ -7,7 +7,7 @@
      */
     class ReplyButton {
         /**
-         * @var mixed|string reply button text
+         * @var string reply button text
          */
         protected string $text;
 
