@@ -21,7 +21,7 @@
         /**
          * @var Client bot's instance
          */
-        protected Client $client;
+        protected $client;
 
         /**
          * @var BotRouter bot's router

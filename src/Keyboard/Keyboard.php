@@ -4,6 +4,7 @@
 
     use Lucifier\Framework\Keyboard\Inline\InlineKeyboard;
     use Lucifier\Framework\Keyboard\Reply\ReplyKeyboard;
+    use Lucifier\Framework\Utils\Logger\FileLogger;
 
     class Keyboard {
         /**
@@ -34,7 +35,7 @@
         }
 
         /**
-         * Build curent keyboard result object
+         * Build current keyboard result object
          *
          * @param array $parametes array for keyboard build
          * @return array
