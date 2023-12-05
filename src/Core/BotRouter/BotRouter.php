@@ -4,6 +4,7 @@
 
     use Exception;
     use Lucifier\Framework\Core\DIContainer\DIContainer;
+    use Lucifier\Framework\Utils\Logger\FileLogger;
     use TelegramBot\Api\Client;
     use TelegramBot\Api\Types\Message;
     use TelegramBot\Api\Types\Update;
@@ -11,11 +12,13 @@
     class BotRouter {
         private array $routers = [];
         private string $namespace = "";
+        private string $originalNamespace;
 
         public function __construct() {}
 
         public function setNamespace(string $namespace) {
-            $this->namespace = $namespace;
+            $this->namespace = $namespace."\\Controllers\\";
+            $this->originalNamespace = $namespace;
         }
 
         public function text(string $text, string $action) {
@@ -45,9 +48,11 @@
         private function isCommandMessage(Message $message) {
             $entities = $message->getEntities();
 
-            foreach ($entities as $entity) {
-                if ($entity->getType() === "bot_command") {
-                    return true;
+            if (isset($entities)) {
+                foreach ($entities as $entity) {
+                    if ($entity->getType() === "bot_command") {
+                        return true;
+                    }
                 }
             }
 
@@ -84,7 +89,8 @@
                         try {
                             $instance->call($router["action"], [
                                 "bot" => $bot,
-                                "update" => $update
+                                "update" => $update,
+                                "namespace" => $this->originalNamespace
                             ]);
                         } catch(Exception $err) {
                         }

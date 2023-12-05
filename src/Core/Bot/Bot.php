@@ -3,10 +3,8 @@
     namespace Lucifier\Framework\Core\Bot;
 
     use Lucifier\Framework\Core\BotRouter\BotRouter;
-    use Lucifier\Framework\Keyboard\Inline\InlineKeyboard;
     use TelegramBot\Api\Client;
     use TelegramBot\Api\InvalidJsonException;
-    use TelegramBot\Api\Types\Inline\InlineKeyboardMarkup;
     use TelegramBot\Api\Types\Update;
 
     class Bot {

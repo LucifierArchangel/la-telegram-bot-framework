@@ -6,15 +6,17 @@
      * Simple message builder with simple template engine
      */
     abstract class Message {
+        protected $preview = false;
+        protected $type="send";
         /**
          * @var array array of field's names for template engine
          */
-        private $fields = array();
+        protected $fields = array();
 
         /**
          * @var string message template
          */
-        private $template = "";
+        protected $template = "";
 
         /**
          * Validating data against specified fields
@@ -29,6 +31,14 @@
             }
 
             return true;
+        }
+
+        public function getType() {
+            return $this->type;
+        }
+
+        public function getPreview() {
+            return $this->preview;
         }
 
         /**
