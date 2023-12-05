@@ -2,6 +2,7 @@
 
     namespace Lucifier\Framework\Core\View;
 
+    use Lucifier\Framework\Utils\Logger\FileLogger;
     use TelegramBot\Api\Client;
     use TelegramBot\Api\Types\Inline\InlineKeyboardMarkup;
     use TelegramBot\Api\Types\ReplyKeyboardMarkup;
@@ -22,25 +23,38 @@
         public function configure() {}
 
         public function show($message=[], $keyboard=[]): void {
-            $this->configure();
+            $currentMessage = $this->update->getMessage();
 
 
-            $text = $this->message->run($message ?? []);
-            $answerKeyboard = null;
+            $chatId = null;
 
-            if (isset($this->keyboard)) {
-                $answerKeyboard = $this->keyboard->build($keyboard ?? []);
+            if(isset($currentMessage)) {
+                $chatId = $currentMessage->getChat()->getId();
+            } else {
+                $currentMessage = $this->update->getCallbackQuery();
 
-                $answerKeyboard = $this->keyboard->getType() === "inline" ?
-                    new InlineKeyboardMarkup($answerKeyboard) :
-                    new ReplyKeyboardMarkup($answerKeyboard, false, true);
+                if (isset($currentMessage)) {
+                    $chatId = $currentMessage->getMessage()->getChat()->getId();
+                }
             }
 
-            $message = $this->update->getMessage();
-            $chatId = $message->getChat()->getId();
+            if (isset($chatId)) {
+                $this->configure();
 
-            if ($this->message->getType() === "send") {
-                $this->bot->sendMessage($chatId, $text, "HTML", $this->message->getPreview(), null, $answerKeyboard);
+                $text = $this->message->run($message ?? []);
+                $answerKeyboard = null;
+
+                if (isset($this->keyboard)) {
+                    $answerKeyboard = $this->keyboard->build($keyboard ?? []);
+
+                    $answerKeyboard = $this->keyboard->getType() === "inline" ?
+                        new InlineKeyboardMarkup($answerKeyboard) :
+                        new ReplyKeyboardMarkup($answerKeyboard, false, true);
+                }
+
+                if ($this->message->getType() === "send") {
+                    $this->bot->sendMessage($chatId, $text, "HTML", $this->message->getPreview(), null, $answerKeyboard);
+                }
             }
         }
     }

@@ -4,7 +4,6 @@
 
     use Exception;
     use Lucifier\Framework\Core\DIContainer\DIContainer;
-    use Lucifier\Framework\Utils\Logger\FileLogger;
     use TelegramBot\Api\Client;
     use TelegramBot\Api\Types\Message;
     use TelegramBot\Api\Types\Update;
