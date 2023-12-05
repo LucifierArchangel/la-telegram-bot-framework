@@ -2,25 +2,49 @@
 
     namespace Lucifier\Framework\Core\BotRouter;
 
-    use Exception;
     use Lucifier\Framework\Core\DIContainer\DIContainer;
+    use ReflectionException;
     use TelegramBot\Api\Client;
     use TelegramBot\Api\Types\Message;
     use TelegramBot\Api\Types\Update;
 
     class BotRouter {
+        /**
+         * @var array bot's routers array
+         */
         private array $routers = [];
+
+        /**
+         * @var string bot's namespace
+         */
         private string $namespace = "";
+
+        /**
+         * @var string bot's high level namespace
+         */
         private string $originalNamespace;
 
         public function __construct() {}
 
-        public function setNamespace(string $namespace) {
+        /**
+         * Set namespace for current bot router
+         *
+         * @param string $namespace bot's high level namespace
+         * @return void
+         */
+        public function setNamespace(string $namespace): void {
             $this->namespace = $namespace."\\Controllers\\";
             $this->originalNamespace = $namespace;
         }
 
-        public function text(string $text, string $action) {
+        /**
+         * Add new text handler
+         *
+         * @param string $text      text's string
+         * @param string $action    handler for text action
+         * @return void
+         */
+        public function text(string $text, string $action): void {
             $this->routers[] = array(
                 "type" => "text",
                 "text" => $text,
@@ -28,7 +52,14 @@
             );
         }
 
-        public function callback(string $callback, string $action) {
+        /**
+         * Add new callback handler
+         *
+         * @param string $callback   callback's string
+         * @param string $action     handler for callback
+         * @return void
+         */
+        public function callback(string $callback, string $action): void {
             $this->routers[] = array(
                 "type" => "callback",
                 "text" => $callback,
@@ -36,7 +67,14 @@
             );
         }
 
-        public function command(string $command, string $action) {
+        /**
+         * Add new command handler
+         *
+         * @param string $command   command's string
+         * @param string $action    handler for command
+         * @return void
+         */
+        public function command(string $command, string $action): void {
             $this->routers[] = array(
                 "type" => "command",
                 "text" => $command,
@@ -44,7 +82,13 @@
             );
         }
 
-        private function isCommandMessage(Message $message) {
+        /**
+         * Check message what is text command message
+         *
+         * @param Message $message current message instance
+         * @return bool
+         */
+        private function isCommandMessage(Message $message): bool {
             $entities = $message->getEntities();
 
             if (isset($entities)) {
@@ -59,7 +103,12 @@
         }
 
         /**
-         * @throws \ReflectionException
+         * Handle bot action with applied handlers
+         *
+         * @param Update $update current update instance
+         * @param Client $bot current bot instance
+         * @return void
+         * @throws ReflectionException
          */
         public function handle(Update $update, Client $bot): void {
             $instance = DIContainer::instance();
@@ -85,14 +134,11 @@
             foreach ($this->routers as $router) {
                 if ($router["type"] === $type) {
                     if ($data === $router["text"]) {
-                        try {
-                            $instance->call($router["action"], [
-                                "bot" => $bot,
-                                "update" => $update,
-                                "namespace" => $this->originalNamespace
-                            ]);
-                        } catch(Exception $err) {
-                        }
+                        $instance->call($router["action"], [
+                            "bot" => $bot,
+                            "update" => $update,
+                            "namespace" => $this->originalNamespace
+                        ]);
                     }
                 }
             }

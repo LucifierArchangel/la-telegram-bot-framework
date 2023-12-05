@@ -8,15 +8,35 @@
     use TelegramBot\Api\Types\Update;
 
     class Bot {
+        /**
+         * @var string bot's prefix
+         */
         protected string $prefix;
+
+        /**
+         * @var string bot's token
+         */
         protected string $token;
+
+        /**
+         * @var Client bot's instance
+         */
         protected Client $client;
+
+        /**
+         * @var BotRouter bot's router
+         */
         protected BotRouter $router;
 
         public function __construct() {
             $this->router = new BotRouter();
         }
 
+        /**
+         * Bot initialization
+         *
+         * @return void
+         */
         public function initClient(): void {
             $this->client = new Client($this->token);
 
@@ -29,10 +49,21 @@
             });
         }
 
+        /**
+         * Set bot token
+         *
+         * @param string $token bot's token
+         * @return void
+         */
         public function setToken(string $token): void {
             $this->token = $token;
         }
 
+        /**
+         * Get current bot's prefix
+         *
+         * @return string
+         */
         public function getPrefix(): string {
             return $this->prefix;
         }

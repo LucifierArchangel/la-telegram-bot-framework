@@ -9,14 +9,36 @@
     use ReflectionNamedType;
 
     class DIContainer {
+        /**
+         * @var DIContainer|null current instance
+         */
         protected static $instance;
+
+        /**
+         * @var string class name for calling
+         */
         protected string $callbackClass;
 
+        /**
+         * @var string class method for calling
+         */
         protected string $callbackMethod;
 
+        /**
+         * @var string separator for callable string
+         */
         protected string $methodSeparator = "@";
+
+        /**
+         * @var string namespace for class finder
+         */
         protected string $namespace = "App\\BotRouter\\";
 
+        /**
+         * Get current singleton instance
+         *
+         * @return DIContainer
+         */
         public static function instance(): DIContainer {
             if(is_null(self::$instance)) {
                 self::$instance = new self();
@@ -25,14 +47,25 @@
             return self::$instance;
         }
 
-        public function setNamespace($namespace) {
+        /**
+         * Set namespace
+         *
+         * @param string $namespace namespace
+         * @return void
+         */
+        public function setNamespace(string $namespace): void {
             $this->namespace = $namespace;
         }
 
         /**
+         * Call method by "ClassName@methodName" string
+         *
+         * @param string $callable   callable string
+         * @param array $parameters  method parameters array
+         * @return mixed
          * @throws ReflectionException
          */
-        public function call($callable, $parameters = []) {
+        public function call(string $callable, array $parameters = []): mixed {
             $this->resolveCallback($callable);
 
             $methodReflection = new ReflectionMethod($this->callbackClass, $this->callbackMethod);
@@ -64,7 +97,13 @@
             return $methodReflection->invoke($initClass, ...$dependencies);
         }
 
-        public function resolveCallback($callable): void {
+        /**
+         * Resolve callable string
+         *
+         * @param string $callable callable string
+         * @return void
+         */
+        public function resolveCallback(string $callable): void {
             $segments = explode($this->methodSeparator, $callable);
 
             $this->callbackClass = $this->namespace.$segments[0];
@@ -72,9 +111,14 @@
         }
 
         /**
+         * Make class instance for next method apply
+         *
+         * @param mixed $class        class for making instance
+         * @param array $parameters   parameters for class constructor
+         * @return object
          * @throws ReflectionException
          */
-        public function make($class, $parameters = []) {
+        public function make(mixed $class, array $parameters = []): object {
             $classReflection = new ReflectionClass($class);
             $constructorParams = $classReflection->getConstructor()->getParameters();
 

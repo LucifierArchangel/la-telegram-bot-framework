@@ -2,20 +2,47 @@
 
     namespace Lucifier\Framework\Keyboard;
 
+    use Lucifier\Framework\Keyboard\Inline\InlineKeyboard;
+    use Lucifier\Framework\Keyboard\Reply\ReplyKeyboard;
+
     class Keyboard {
+        /**
+         * @var string current keyboard's type. May be "reply" or "inline"
+         */
         protected $type = "reply";
+        /**
+         * @var InlineKeyboard|ReplyKeyboard current keyboard
+         */
         protected $keyboard;
 
-        public function configure ($parameters=[]) {}
+        /**
+         * Configure current keyboard class
+         * For child class
+         *
+         * @param array $parameters parameters array for keyboard configure
+         * @return void
+         */
+        public function configure (array $parameters=[]) {}
 
-        public function getType() {
+        /**
+         * Get current keyboard type
+         *
+         * @return string
+         */
+        public function getType(): string {
             return $this->type;
         }
 
-        public function build($parametes=[]) {
-            $this->configure($parametes);
+        /**
+         * Build curent keyboard result object
+         *
+         * @param array $parametes array for keyboard build
+         * @return array
+         */
+        public function build(array $parameters=[]): array {
+            $this->configure($parameters);
 
-            return $this->keyboard->build($parametes);
+            return $this->keyboard->build();
         }
     }
 

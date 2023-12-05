@@ -6,6 +6,9 @@
     use Lucifier\Framework\Core\Bot\Bot;
     use TelegramBot\Api\InvalidJsonException;
 
+    /**
+     * Deprecated
+     */
     class Bootstrap {
 
         private static function getBotString(string $uri): string {

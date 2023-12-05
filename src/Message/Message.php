@@ -6,8 +6,16 @@
      * Simple message builder with simple template engine
      */
     abstract class Message {
+        /**
+         * @var bool message preview
+         */
         protected $preview = false;
+
+        /**
+         * @var string message type for view
+         */
         protected $type="send";
+
         /**
          * @var array array of field's names for template engine
          */
@@ -33,11 +41,21 @@
             return true;
         }
 
-        public function getType() {
+        /**
+         * Get message type
+         *
+         * @return mixed|string
+         */
+        public function getType(): mixed {
             return $this->type;
         }
 
-        public function getPreview() {
+        /**
+         * Get message preview
+         *
+         * @return bool
+         */
+        public function getPreview(): bool {
             return $this->preview;
         }
 
