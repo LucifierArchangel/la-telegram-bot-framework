@@ -5,16 +5,16 @@
     /**
      * Simple message builder with simple template engine
      */
-    class Message {
+    abstract class Message {
         /**
          * @var array array of field's names for template engine
          */
-        private array $fields = array();
+        private $fields = array();
 
         /**
          * @var string message template
          */
-        private string $template = "";
+        private $template = "";
 
         /**
          * Validating data against specified fields

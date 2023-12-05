@@ -30,7 +30,7 @@
          * @return array
          */
         public function build(): array {
-            return ['text' => $this->text, 'callback' => $this->callback];
+            return ['text' => $this->text, 'callback_data' => $this->callback];
         }
     }
 
