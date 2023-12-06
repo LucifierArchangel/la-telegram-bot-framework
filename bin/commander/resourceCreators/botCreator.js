@@ -1,16 +1,15 @@
-const fs = require('fs/promises')
-const composerContent = require('./initProjectsContent/composerContent')
-const indexContent = require('./initProjectsContent/indexPHP')
-const testBotPhp = require('./initProjectsContent/TestBotPHP')
-const testController = require('./initProjectsContent/testControllerPHP')
-const testInlineKeyboard = require('./initProjectsContent/testInlineKeyboardPHP')
-const testMessage = require('./initProjectsContent/testMessagePHP')
-const testReplyInline = require('./initProjectsContent/testReplyKeyboardPHP')
-const testView = require('./initProjectsContent/testViewPHP')
-const { makeDirectory } = require('../helpers/makeDirectory')
-const { makeFile } = require('../helpers/makeFile')
+const testController = require('../initProjectsContent/testControllerPHP')
+const testInlineKeyboard = require('../initProjectsContent/testInlineKeyboardPHP')
+const testReplyInline = require('../initProjectsContent/testReplyKeyboardPHP')
+const testMessage = require('../initProjectsContent/testMessagePHP')
+const testView = require('../initProjectsContent/testViewPHP')
+const testBotPhp = require('../initProjectsContent/TestBotPHP')
+const indexContent = require('../initProjectsContent/indexPHP')
+const composerContent = require('../initProjectsContent/composerContent')
+const { makeDirectory } = require('../../helpers/makeDirectory')
+const { makeFile } = require('../../helpers/makeFile')
 
-async function initProject(name, initDb) {
+async function botCreator(name) {
     const projectStructure = [
         {
             type: 'dir',
@@ -22,7 +21,7 @@ async function initProject(name, initDb) {
                     sub: [
                         {
                             type: 'dir',
-                            name: 'TestBot',
+                            name: `${name}Bot`,
                             sub: [
                                 {
                                     type: 'dir',
@@ -89,7 +88,7 @@ async function initProject(name, initDb) {
                                 },
                                 {
                                     type: 'file',
-                                    name: 'TestBot.php',
+                                    name: `${name}Bot.php`,
                                     content: testBotPhp,
                                 },
                             ],
@@ -103,26 +102,15 @@ async function initProject(name, initDb) {
                 },
             ],
         },
-        {
-            type: 'file',
-            name: 'composer.json',
-            content: composerContent,
-        },
     ]
-
-    try {
-        await fs.mkdir(`./${name}`)
-    } catch (e) {}
 
     for (const item of projectStructure) {
         if (item.type === 'dir') {
-            await makeDirectory(`./${name}`, item)
+            await makeDirectory(`./`, item)
         } else if (item.type === 'file') {
-            await makeFile(`./${name}`, item)
+            await makeFile(`./`, item)
         }
     }
 }
 
-module.exports = {
-    initProject,
-}
+module.exports = { botCreator }

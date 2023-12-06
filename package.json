@@ -3,6 +3,9 @@
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
+    "bin": {
+        "laf_commander": "bin/lucifier_commander.js"
+    },
     "scripts": {
         "php:doc": "docker run --rm -v .:/data phpdoc/phpdoc:3",
         "php:doc_serve": "npx serve .phpdoc/build",

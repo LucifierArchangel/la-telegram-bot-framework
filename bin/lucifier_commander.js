@@ -3,6 +3,7 @@
 const { Command } = require('commander')
 
 const { initProject } = require('./commander/initProject')
+const { addNewResource } = require('./commander/addNewResource')
 
 program = new Command()
 
@@ -18,6 +19,20 @@ program
     .option('-id, --init-db', 'Init prisma schema')
     .action(async (str, options) => {
         await initProject(str.name, str.initProject)
+    })
+
+program
+    .command('create')
+    .description('Create new resource for application')
+    .argument(
+        '<name>',
+        'Resource name: bot|controller|inline_keyboard|reply_keyboard|message|view'
+    )
+    .option('-b, --bot <botName>', 'Bot name to add resource')
+    .requiredOption('-r, --resource-name <resourceName>', 'Resource name')
+    .action(async (str, options) => {
+        console.log(str, options)
+        await addNewResource(str, options)
     })
 
 program.parse()
