@@ -1,6 +1,7 @@
 module.exports = `{
-    "name": "admaker/test",
-    "description": "Test stand for admaker bots",
+    {
+    "name": "{project_name}",
+    "description": "",
     "license": "MIT",
     "autoload": {
         "psr-4": {
@@ -9,14 +10,14 @@ module.exports = `{
     },
     "authors": [
         {
-            "name": "Lucifier"
+            "name": "{YOUR NAME}"
         }
     ],
     "minimum-stability": "dev",
     "repositories": [
         {
-            "type": "path",
-            "url": "/Users/alexey-/admaker_project/framework/la-telegram-bot-framework"
+            "type": "github",
+            "url": "https://github.com/LucifierArchangel/la-telegram-bot-framework.git"
         }
     ],
     "require": {
