@@ -37,7 +37,7 @@
         /**
          * Build current keyboard result object
          *
-         * @param array $parametes array for keyboard build
+         * @param array $parameters
          * @return array
          */
         public function build(array $parameters=[]): array {

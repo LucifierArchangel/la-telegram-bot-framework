@@ -1,5 +1,5 @@
 {
-    "name": "@lucifier/tg-framework",
+    "name": "la-tg-framework",
     "version": "0.0.1",
     "description": "CLI for PHP telegram bot's engine",
     "bin": {

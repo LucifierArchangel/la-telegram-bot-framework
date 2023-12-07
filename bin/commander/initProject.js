@@ -7,11 +7,24 @@ const testInlineKeyboard = require('./initProjectsContent/testInlineKeyboardPHP'
 const testMessage = require('./initProjectsContent/testMessagePHP')
 const testReplyInline = require('./initProjectsContent/testReplyKeyboardPHP')
 const testView = require('./initProjectsContent/testViewPHP')
+const envFileContent = require('./initProjectsContent/envFileContent')
+const prismaSchemaFileContent = require('./initProjectsContent/prismaSchemaFileContent')
 const { makeDirectory } = require('../helpers/makeDirectory')
 const { makeFile } = require('../helpers/makeFile')
 
 async function initProject(name, initDb) {
     const projectStructure = [
+        {
+            type: 'dir',
+            name: 'prisma',
+            sub: [
+                {
+                    type: 'file',
+                    name: 'schema.prisma',
+                    content: prismaSchemaFileContent,
+                },
+            ],
+        },
         {
             type: 'dir',
             name: 'src',
@@ -102,6 +115,11 @@ async function initProject(name, initDb) {
                     content: indexContent,
                 },
             ],
+        },
+        {
+            type: 'file',
+            name: '.env',
+            content: envFileContent,
         },
         {
             type: 'file',
