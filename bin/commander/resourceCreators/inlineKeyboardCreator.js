@@ -39,7 +39,10 @@ async function inlineCreator(botName, keyboardName) {
                                                             type: 'file',
                                                             name: `${keyboardName}Keyboard.php`,
                                                             content:
-                                                                testInlineKeyboard,
+                                                                testInlineKeyboard(
+                                                                    `${botName}Bot`,
+                                                                    '${keyboardName}Keyboard'
+                                                                ),
                                                         },
                                                     ],
                                                 },

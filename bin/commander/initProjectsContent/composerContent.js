@@ -1,5 +1,4 @@
 module.exports = `{
-    {
     "name": "{project_name}",
     "description": "",
     "license": "MIT",

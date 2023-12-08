@@ -34,7 +34,10 @@ async function messageCreator(botName, messageName) {
                                                 {
                                                     type: 'file',
                                                     name: `${messageName}Message.php`,
-                                                    content: testMessage,
+                                                    content: testMessage(
+                                                        `${botName}Bot`,
+                                                        `${messageName}Message`
+                                                    ),
                                                 },
                                             ],
                                         },

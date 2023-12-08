@@ -1,10 +1,10 @@
-module.exports = `<?php
+module.exports = (botName, controllerName) => `<?php
 
-    namespace Bots\\TestBot\\Controllers;
+    namespace Bots\\${botName}\\Controllers;
 
     use Lucifier\\Framework\\Core\\Controller\\Controller;
 
-    class TestController extends Controller {
+    class ${controllerName} extends Controller {
         public function testHandler($update, $bot) {
             $this->view("TestView", [
                 "update" => $update,

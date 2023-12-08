@@ -1,11 +1,11 @@
-module.exports = `<?php
+module.exports = (botName, keyboardName) => `<?php
 
-    namespace Bots\\TestBot\\Views\\Keyboards\\Inline;
+    namespace Bots\\${botName}\\Views\\Keyboards\\Inline;
 
     use Lucifier\\Framework\\Keyboard\\Inline\\InlineKeyboard;
     use Lucifier\\Framework\\Keyboard\\Keyboard;
 
-    class TestInlineKeyboard extends Keyboard {
+    class ${keyboardName} extends Keyboard {
         public function configure(array $parameters = []): void {
             $this->type = "inline";
 

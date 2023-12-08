@@ -30,7 +30,10 @@ async function viewCreator(botName, viewName) {
                                         {
                                             type: 'file',
                                             name: `${viewName}View.php`,
-                                            content: testView,
+                                            content: testView(
+                                                `${botName}Bot`,
+                                                `${viewName}View`
+                                            ),
                                         },
                                     ],
                                 },

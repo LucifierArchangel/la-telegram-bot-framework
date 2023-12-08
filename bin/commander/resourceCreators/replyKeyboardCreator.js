@@ -39,7 +39,10 @@ async function replyCreator(botName, keyboardName) {
                                                             type: 'file',
                                                             name: `${keyboardName}Keyboard.php`,
                                                             content:
-                                                                testReplyInline,
+                                                                testReplyInline(
+                                                                    `${botName}Bot`,
+                                                                    `${keyboardName}Keyboard`
+                                                                ),
                                                         },
                                                     ],
                                                 },

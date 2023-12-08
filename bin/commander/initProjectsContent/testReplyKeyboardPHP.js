@@ -1,11 +1,11 @@
-module.exports = `<?php
+module.exports = (botName, keyboardName) => `<?php
 
-    namespace Bots\\TestBot\\Views\\Keyboards\\Reply;
+    namespace Bots\\${botName}\\Views\\Keyboards\\Reply;
 
     use Lucifier\\Framework\\Keyboard\\Keyboard;
     use Lucifier\\Framework\\Keyboard\\Reply\\ReplyKeyboard;
 
-    class TestReplyKeyboard extends Keyboard {
+    class ${keyboardName} extends Keyboard {
         public function  configure(array $parameters = []): void {
             $this->keyboard = new ReplyKeyboard();
             $this->keyboard->addRow()->addButton("Text")->addButton("Text 2");

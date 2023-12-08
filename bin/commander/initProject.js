@@ -44,7 +44,10 @@ async function initProject(name, initDb) {
                                         {
                                             type: 'file',
                                             name: 'TestController.php',
-                                            content: testController,
+                                            content: testController(
+                                                'TestBot',
+                                                'TestController'
+                                            ),
                                         },
                                     ],
                                 },
@@ -64,7 +67,10 @@ async function initProject(name, initDb) {
                                                             type: 'file',
                                                             name: 'TestInlineKeyboard.php',
                                                             content:
-                                                                testInlineKeyboard,
+                                                                testInlineKeyboard(
+                                                                    'TestBot',
+                                                                    'TestInlineKeyboard'
+                                                                ),
                                                         },
                                                     ],
                                                 },
@@ -76,7 +82,10 @@ async function initProject(name, initDb) {
                                                             type: 'file',
                                                             name: 'TestReplyKeyboard.php',
                                                             content:
-                                                                testReplyInline,
+                                                                testReplyInline(
+                                                                    'TestBot',
+                                                                    'TestReplyKeyboard'
+                                                                ),
                                                         },
                                                     ],
                                                 },
@@ -89,14 +98,20 @@ async function initProject(name, initDb) {
                                                 {
                                                     type: 'file',
                                                     name: 'TestMessage.php',
-                                                    content: testMessage,
+                                                    content: testMessage(
+                                                        'TestBot',
+                                                        'TestMessage'
+                                                    ),
                                                 },
                                             ],
                                         },
                                         {
                                             type: 'file',
                                             name: 'TestView.php',
-                                            content: testView,
+                                            content: testView(
+                                                'TestBot',
+                                                'TestView'
+                                            ),
                                         },
                                     ],
                                 },

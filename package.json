@@ -1,6 +1,6 @@
 {
     "name": "la-tg-framework",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "CLI for PHP telegram bot's engine",
     "bin": {
         "laf_commander": "bin/lucifier_commander.js"

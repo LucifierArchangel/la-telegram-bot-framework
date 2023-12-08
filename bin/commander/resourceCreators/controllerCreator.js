@@ -30,7 +30,10 @@ async function controllerCreator(botName, controllerName) {
                                         {
                                             type: 'file',
                                             name: `${controllerName}Controller.php`,
-                                            content: testController,
+                                            content: testController(
+                                                `${botName}Bot`,
+                                                `${controllerName}Controller`
+                                            ),
                                         },
                                     ],
                                 },

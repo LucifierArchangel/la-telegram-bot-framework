@@ -30,7 +30,10 @@ async function botCreator(name) {
                                         {
                                             type: 'file',
                                             name: 'TestController.php',
-                                            content: testController,
+                                            content: testController(
+                                                `${name}Bot`,
+                                                'TestController'
+                                            ),
                                         },
                                     ],
                                 },
@@ -50,7 +53,10 @@ async function botCreator(name) {
                                                             type: 'file',
                                                             name: 'TestInlineKeyboard.php',
                                                             content:
-                                                                testInlineKeyboard,
+                                                                testInlineKeyboard(
+                                                                    `${name}Bot`,
+                                                                    'TestInlineKeyboard'
+                                                                ),
                                                         },
                                                     ],
                                                 },
@@ -62,7 +68,10 @@ async function botCreator(name) {
                                                             type: 'file',
                                                             name: 'TestReplyKeyboard.php',
                                                             content:
-                                                                testReplyInline,
+                                                                testReplyInline(
+                                                                    `${name}Bot`,
+                                                                    'TestReplyKeyboard'
+                                                                ),
                                                         },
                                                     ],
                                                 },
@@ -75,14 +84,20 @@ async function botCreator(name) {
                                                 {
                                                     type: 'file',
                                                     name: 'TestMessage.php',
-                                                    content: testMessage,
+                                                    content: testMessage(
+                                                        `${name}Bot`,
+                                                        'TestMessage'
+                                                    ),
                                                 },
                                             ],
                                         },
                                         {
                                             type: 'file',
                                             name: 'TestView.php',
-                                            content: testView,
+                                            content: testView(
+                                                `${name}Bot`,
+                                                'TestView'
+                                            ),
                                         },
                                     ],
                                 },
