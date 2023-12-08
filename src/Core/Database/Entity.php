@@ -17,25 +17,13 @@
         protected $db;
         protected $tableName;
 
-        public function __construct($db) {}
+        public function __construct() {}
 
-        public function setDB($db) {
+        public function setDB($db): void {
             $this->db = $db;
         }
 
-        public function open() {
-            $this->openNew(DB_USER, DB_PASSWORD, DB_HOST, DB_PASSWORD, DB_NAME);
-        }
-
-        public function openNew(string $dbUser, string $dbPassword, string $dbHost, string $dbPort, string $dbName) {
-            try {
-                $this->db = new PDO('mysql:host='.$dbHost.':'.$dbPort.'dbname='.$dbName, $dbUser, $dbPassword);
-            } catch (Exception $e) {
-                throw new Exception("Error creating a database connection");
-            }
-        }
-
-        public function save() {
+        public function save(): void {
             $class = new ReflectionClass($this);
             $tableName = '';
 
