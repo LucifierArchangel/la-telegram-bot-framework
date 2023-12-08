@@ -103,6 +103,18 @@
         }
 
         /**
+         * Get callback string without parameters
+         *
+         * @param string $data callback data from update
+         * @return string
+         */
+        private function getCallbackWithoutParameters(string $data): string {
+            $splitedData = explode("&", $data);
+
+            return $splitedData[0];
+        }
+
+        /**
          * Handle bot action with applied handlers
          *
          * @param Update $update current update instance
@@ -128,7 +140,7 @@
                 $data = $message->getText();
                 $data = str_replace("/", "", $data);
             } else if (isset($callback)) {
-                $data = $callback->getData();
+                $data = $this->getCallbackWithoutParameters($callback->getData());
             }
 
             foreach ($this->routers as $router) {
