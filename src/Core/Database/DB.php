@@ -2,11 +2,11 @@
 
     namespace Lucifier\Framework\Core\Database;
 
-    use _PHPStan_79aa371a9\Nette\Neon\Exception;
+    use Exception;
     use mysqli;
     use mysqli_result;
 
-    class DB {
+    class DB implements IDatabase {
         private mysqli $connection;
         public string $dbName;
 
@@ -116,6 +116,7 @@
          * @param string $sql
          * @param array $substitutions
          * @return false|mixed
+         * @throws Exception
          */
         public function getCell(string $sql, array $substitutions=[]): mixed {
             $tmp = $this->getColumn($sql, false, $substitutions);
@@ -129,6 +130,7 @@
          * @param string $sql
          * @param array $substitutions
          * @return array|false|mixed
+         * @throws Exception
          */
         public function getRow(string $sql, array $substitutions=[]): mixed {
             $tmp = $this->getTable($sql, false, $substitutions);
@@ -167,23 +169,23 @@
          * For table queries
          *
          * @param string $sql
-         * @param bool|string $keycol
+         * @param bool|string $keyCol
          * @param array $substitutions
          * @return array
          * @throws Exception
          */
-        public function getTable(string $sql, bool|string $keycol=false, array $substitutions=[]): array {
+        public function getTable(string $sql, bool|string $keyCol=false, array $substitutions=[]): array {
             $data = [];
 
             $result = $this->query($sql, $substitutions);
 
-            if (!$keycol) {
+            if (!$keyCol) {
                 while ($row = mysqli_fetch_row($result)) {
                     $data[] = $row;
                 }
             } else {
                 while ($row = mysqli_fetch_row($result)) {
-                    $data[$row[$keycol]] = $row;
+                    $data[$row[$keyCol]] = $row;
                 }
             }
 
@@ -352,8 +354,12 @@
             return $sql;
         }
 
-        public function close(mysqli $connect): void {
-            mysqli_close($connect);
+        public function close(?mysqli $connect): void {
+            if (isset($connect)) {
+                mysqli_close($connect);
+            } else {
+                mysqli_close($this->connection);
+            }
         }
     }
 ?>
