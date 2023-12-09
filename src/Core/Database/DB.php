@@ -7,8 +7,34 @@
     use mysqli_result;
 
     class DB implements IDatabase {
+        private static $instance;
         private mysqli $connection;
         public string $dbName;
+
+        /**
+         * Empty method to block the creation of a new instance
+         */
+        public function __construct() { }
+
+        /**
+         * Empty method to block object cloning
+         *
+         * @return void
+         */
+        public function __clone() { }
+
+        /**
+         * Get singleton for current database class realisation
+         *
+         * @return IDatabase
+         */
+        public static function getInstance(): IDatabase {
+            if (!self::$instance) {
+                self::$instance = new self;
+            }
+
+            return self::$instance;
+        }
 
         /**
          * Open new database connection
