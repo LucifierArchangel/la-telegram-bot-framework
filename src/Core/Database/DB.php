@@ -206,11 +206,11 @@
             $result = $this->query($sql, $substitutions);
 
             if (!$keyCol) {
-                while ($row = mysqli_fetch_row($result)) {
+                while ($row = mysqli_fetch_assoc($result)) {
                     $data[] = $row;
                 }
             } else {
-                while ($row = mysqli_fetch_row($result)) {
+                while ($row = mysqli_fetch_assoc($result)) {
                     $data[$row[$keyCol]] = $row;
                 }
             }
@@ -221,14 +221,16 @@
         /**
          * Write or update data
          *
-         * @param $tableName
-         * @param $data
+         * @param string $tableName
+         * @param array $data
          * @param $unique_key
-         * @param $mode
+         * @param string|bool $mode
          * @return int|string
          * @throws Exception
          */
         public function writeRow(string $tableName, array $data, mixed $unique_key = false, string|bool $mode=false): int|string {
+            $out = "";
+
             if (!$unique_key) {
                 if (!$mode) {
                     $sql = "INSERT";
@@ -286,18 +288,19 @@
 
                     $sql = substr($sql, 0, -2);
 
-                    if ($unique_key) {
-                        foreach ($unique_key as $key => $value) {
-                            $part = " `$key` ";
-                            $part .= (!is_null($value))
-                                ? " = " . $this->escape($value)
-                                : " IS NULL";
-                            $parts[] = $part;
-                        }
-
-                        $sql .= " WHERE (".implode(") AND (", $parts).")";
-                        unset($parts, $part);
+//                    if ($unique_key) {
+                    $parts = [];
+                    foreach ($unique_key as $key => $value) {
+                        $part = " `$key` ";
+                        $part .= (!is_null($value))
+                            ? " = " . $this->escape($value)
+                            : " IS NULL";
+                        $parts[] = $part;
                     }
+
+                    $sql .= " WHERE (".implode(") AND (", $parts).")";
+                    unset($parts, $part);
+//                    }
 
                     $resutl = $this->query($sql);
 
@@ -331,7 +334,7 @@
                         $sql = substr($sql, 0, -2);
                     }
 
-                    $result = $this->query($sql);
+                    $this->query($sql);
 
                     $out = $this->connection->insert_id;
                 }

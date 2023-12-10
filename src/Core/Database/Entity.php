@@ -2,19 +2,16 @@
 
     namespace Lucifier\Framework\Core\Database;
 
+    use ReflectionClass;
+
     define('DB_USER', '');
     define('DB_PASSWORD', '');
     define('DB_HOST', '');
     define('DB_PORT', '');
     define('DB_NAME', '');
 
-    use Exception;
-    use PDO;
-    use ReflectionClass;
-    use ReflectionProperty;
-
     abstract class Entity {
-        protected $db;
+        protected IDatabase $db;
         protected $tableName;
 
         public function __construct() {}
@@ -23,31 +20,67 @@
             $this->db = $db;
         }
 
-        public function save(): void {
-            $class = new ReflectionClass($this);
-            $tableName = '';
-
-            if ($this->tableName !== '') {
-                $tableName = $this->tableName;
-            } else {
-                $tableName = strtolower($class->getShortName());
-            }
-
+        public function createOrStatement($or) {
             $propsToImplode = [];
 
-            foreach ($class->getProperties(ReflectionProperty::IS_PUBLIC) as $property) {
-                $propertyName = $property->getName();
-                $propsToImplode[] = '`'.$propertyName.'` = "'.$this->{$propertyName}.'"';
+            foreach ($or as $item) {
+                $propsToImplode[] = $this->createWhereCondition($item);
             }
 
-            $setClause = implode(",", $propsToImplode);
-            $sqlQuery = "";
+            return " ( ".implode(" OR ", $propsToImplode)." )";
+        }
 
-            if (isset($this->id) && $this->id > 0) {
-                $sqlQuery = 'UPDATE `'.$tableName.'` SET '.$setClause.' WHERE id='.$this->id;
+        private function createWhereCondition($where) {
+            $propsToImplode = [];
+
+            foreach ($where as $key => $value) {
+                if (!is_array($value)) {
+                    $propsToImplode[] = $this->db->convertKeyValuePairForWriting($key, $value);
+                } elseif (is_array($value)) {
+                    if ($key === 'OR') {
+                        $propsToImplode[] = $this->createOrStatement($value);
+                    } elseif ($key === 'AND') {
+                        $propsToImplode[] = $this->createWhereCondition($value);
+                    } else {
+
+                    }
+                }
+            }
+
+            return implode(' AND ', $propsToImplode);
+        }
+
+        public function getFindSql(array $conditions) {
+            $class = new ReflectionClass($this);
+
+            if (isset($this->tableName)) {
+                $tableName = $this->tableName;
             } else {
-                $sqlQuery = 'INSERT INTO `'.$tableName.'` SET '.$setClause;
+                $tableName = $class->getShortName();
             }
+
+            if (isset($conditions["where"])) {
+                $whereClause = $this->createWhereCondition($conditions["where"]);
+            }
+
+            $sql = "SELECT * FROM ".$tableName;
+            if (isset($whereClause)) {
+                $sql .= " WHERE". $whereClause;
+            }
+
+            return $sql;
+        }
+
+        public function findMany(array $conditions = []): array {
+            $sql = $this->getFindSql($conditions);
+
+            return $this->db->getTable($sql);
+        }
+
+        public function findFirst(array $conditions = []): array {
+            $sql = $this->getFindSql($conditions)." LIMIT 1";
+
+            return $this->db->getTable($sql);
         }
     }
 
