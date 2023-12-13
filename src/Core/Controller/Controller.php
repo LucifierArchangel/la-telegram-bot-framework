@@ -8,14 +8,6 @@
 
     class Controller {
         /**
-         * @var string constroller's bot namespace
-         */
-        protected string $namespace;
-        public function __construct($namespace) {
-            $this->namespace = $namespace;
-        }
-
-        /**
          * Call view class show method
          *
          * @param string $view        view name
@@ -23,12 +15,12 @@
          * @return void
          * @throws ReflectionException
          */
-        public function view(string $view, array $parametes=[]): void {
+        public function view(string $view, array $parameters=[]): void {
             $instance = Container::instance();
 
-            $viewInstance = $instance->resolve($view, $parametes);
+            $viewInstance = $instance->resolve($view, $parameters);
 
-            $instance->resolveMethod($viewInstance, 'show', $parametes);
+            $instance->resolveMethod($viewInstance, 'show', $parameters);
         }
     }
 

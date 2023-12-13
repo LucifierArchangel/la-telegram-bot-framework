@@ -3,6 +3,8 @@
     namespace Lucifier\Framework\Core\BotRouter;
 
     use Lucifier\Framework\Core\DIContainer\DIContainer;
+    use Lucifier\Framework\Core\IoC\Container;
+    use Lucifier\Framework\Utils\Logger\FileLogger;
     use ReflectionException;
     use TelegramBot\Api\Client;
     use TelegramBot\Api\Types\Message;
@@ -44,11 +46,11 @@
          * @param string $action    handler for text action
          * @return void
          */
-        public function text(string $text, string $action): void {
+        public function text(string $text, array $action): void {
             $this->routers[] = array(
                 "type" => "text",
                 "text" => $text,
-                "action" => $action
+                "action" => [$action[0], $action[1] ?? "__invoke"]
             );
         }
 
@@ -59,11 +61,11 @@
          * @param string $action     handler for callback
          * @return void
          */
-        public function callback(string $callback, string $action): void {
+        public function callback(string $callback, array $action): void {
             $this->routers[] = array(
                 "type" => "callback",
                 "text" => $callback,
-                "action" => $action
+                "action" => [$action[0], $action[1] ?? "__invoke"]
             );
         }
 
@@ -74,11 +76,11 @@
          * @param string $action    handler for command
          * @return void
          */
-        public function command(string $command, string $action): void {
+        public function command(string $command, array $action): void {
             $this->routers[] = array(
                 "type" => "command",
                 "text" => $command,
-                "action" => $action
+                "action" => [$action[0], $action[1] ?? "__invoke"]
             );
         }
 
@@ -123,8 +125,7 @@
          * @throws ReflectionException
          */
         public function handle(Update $update, Client $bot): void {
-            $instance = DIContainer::instance();
-            $instance->setNamespace($this->namespace);
+            $instance = Container::instance();
 
             $message = $update->getMessage();
             $callback = $update->getCallbackQuery();
@@ -146,10 +147,13 @@
             foreach ($this->routers as $router) {
                 if ($router["type"] === $type) {
                     if ($data === $router["text"]) {
-                        $instance->call($router["action"], [
+                        $controllerInstance = $instance->resolve($router["action"][0], [
                             "bot" => $bot,
                             "update" => $update,
-                            "namespace" => $this->originalNamespace
+                        ]);
+                        $instance->resolveMethod($controllerInstance, $router["action"][1], [
+                            "bot" => $bot,
+                            "update" => $update,
                         ]);
                     }
                 }
