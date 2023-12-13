@@ -2,6 +2,7 @@
 
     namespace Lucifier\Framework\Core\IoC;
 
+    use Lucifier\Framework\Utils\Logger\FileLogger;
     use ReflectionClass;
 
     class ClassResolver {

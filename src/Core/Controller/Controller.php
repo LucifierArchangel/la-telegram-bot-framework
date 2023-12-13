@@ -2,7 +2,8 @@
 
     namespace Lucifier\Framework\Core\Controller;
 
-    use Lucifier\Framework\Core\DIContainer\DIContainer;
+    use Lucifier\Framework\Core\IoC\Container;
+    use Lucifier\Framework\Utils\Logger\FileLogger;
     use ReflectionException;
 
     class Controller {
@@ -23,12 +24,11 @@
          * @throws ReflectionException
          */
         public function view(string $view, array $parametes=[]): void {
-            $instance = DIContainer::instance();
-            $instance->setNamespace($this->namespace."\\Views\\");
+            $instance = Container::instance();
 
-            $viewCallable = $view."@show";
+            $viewInstance = $instance->resolve($view, $parametes);
 
-            $instance->call($viewCallable, $parametes);
+            $instance->resolveMethod($viewInstance, 'show', $parametes);
         }
     }
 

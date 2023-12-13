@@ -47,7 +47,7 @@
          * @throws \ReflectionException
          */
         public function resolve(string $namespace, array $args = []): object {
-            return (new ClassResolver($this, $namespace,$args))->getInstance();
+            return (new ClassResolver($this, $namespace, $args))->getInstance();
         }
 
         public function resolveMethod(object $instance, string $method, array $args = []) {

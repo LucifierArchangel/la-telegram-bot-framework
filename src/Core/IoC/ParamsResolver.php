@@ -3,6 +3,9 @@
 namespace Lucifier\Framework\Core\IoC;
 
 
+use Lucifier\Framework\Utils\Logger\FileLogger;
+use ReflectionException;
+use ReflectionNamedType;
 use ReflectionParameter;
 
 class ParamsResolver {
@@ -15,22 +18,21 @@ class ParamsResolver {
     public function getArguments(): array {
         return array_map(
         /**
-         * @throws \ReflectionException
+         * @throws ReflectionException
          */ function (ReflectionParameter $param) {
-                if (array_key_exists($param->getName(), $this->args)) {
-                    return $this->args[$param->getName()];
-                }
+                $type = $param->getType();
+                $name = $param->getName();
 
-    //            return $param->getType() && $param->getType()->isBuiltin()
-    //                ? $this->getClassInstance($param->getType()->getName())
-    //                : $param->getDefaultValue();
+                if ($type && $type instanceof ReflectionNamedType) {
+                    $reflectionInstance = $this->getClassInstance($type);
 
-                if ($param->getType() && $param->getType()->isBuiltin()) {
-                    return $this->getClassInstance($param->getType()->getName());
+                    return $reflectionInstance;
                 } else {
-                    var_dump($param->getType()->isBuiltin());
-                    die;
-                    return $param->getDefaultValue();
+                    if (array_key_exists($name, $this->args)) {
+                        return $this->args[$name];
+                    } else {
+                        return $param->getDefaultValue();
+                    }
                 }
             },
             $this->parameters
