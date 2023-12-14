@@ -2,7 +2,7 @@
 
     namespace Lucifier\Framework\Core\IoC;
 
-    use _PHPStan_79aa371a9\Nette\Neon\Exception;
+    use Exception;
 
     class Container implements IContainer {
         private static $instance;
