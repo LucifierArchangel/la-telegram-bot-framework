@@ -4,14 +4,13 @@ module.exports = `<?php
 
     use Lucifier\\Framework\\Core\\Bot\\Bot;
     use Lucifier\\Framework\\Core\\BotRouter\\BotRouter;
+    use Bots\\TestBot\\Controllers\\TestController;
 
     class TestBot extends Bot {
         public function initClient(): void {
             $this->router = new BotRouter();
 
-            $this->router->setNamespace(__NAMESPACE__);
-
-            $this->router->command("start", "TestController@testHandler");
+            $this->router->command("start", [TestController::class, "testHandler"]);
 
             parent::initClient();
         }

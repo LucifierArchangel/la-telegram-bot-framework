@@ -3,10 +3,11 @@ module.exports = (botName, controllerName) => `<?php
     namespace Bots\\${botName}\\Controllers;
 
     use Lucifier\\Framework\\Core\\Controller\\Controller;
+    use Bots\\TestBot\\Views\\TestView;
 
     class ${controllerName} extends Controller {
         public function testHandler($update, $bot) {
-            $this->view("TestView", [
+            $this->view(TestView::class, [
                 "update" => $update,
                 "bot" => $bot,
                 "message" => [

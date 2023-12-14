@@ -11,7 +11,7 @@ module.exports = `<?php
     try {
         $bot = new TestBot();
 
-        $bot->setToken("5658818186:AAF1Sfgdeg-7ZclVUuFiTsoUCkItWW3rQAs");
+        $bot->setToken("<YOUR_TOKEN>");
         $bot->initClient();
         $bot->run();
 
