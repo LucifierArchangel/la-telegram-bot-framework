@@ -104,7 +104,7 @@ async function botCreator(name) {
                                 {
                                     type: 'file',
                                     name: `${name}Bot.php`,
-                                    content: testBotPhp,
+                                    content: testBotPhp(`${name}Bot`),
                                 },
                             ],
                         },

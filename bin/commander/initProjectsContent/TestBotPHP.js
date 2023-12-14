@@ -1,12 +1,12 @@
-module.exports = `<?php
+module.exports = (botName) => `<?php
 
-    namespace Bots\\TestBot;
+    namespace Bots\\${botName};
 
     use Lucifier\\Framework\\Core\\Bot\\Bot;
     use Lucifier\\Framework\\Core\\BotRouter\\BotRouter;
-    use Bots\\TestBot\\Controllers\\TestController;
+    use Bots\\${botName}\\Controllers\\TestController;
 
-    class TestBot extends Bot {
+    class ${botName} extends Bot {
         public function initClient(): void {
             $this->router = new BotRouter();
 

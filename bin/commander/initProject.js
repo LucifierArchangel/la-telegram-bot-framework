@@ -118,7 +118,7 @@ async function initProject(name, initDb) {
                                 {
                                     type: 'file',
                                     name: 'TestBot.php',
-                                    content: testBotPhp,
+                                    content: testBotPhp('TestBot'),
                                 },
                             ],
                         },
