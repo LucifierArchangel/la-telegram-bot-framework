@@ -257,6 +257,7 @@
                     $sql .= " VALUES () ";
                 }
 
+                FileLogger::log($sql);
                 $result = $this->query($sql);
 
                 $out = $this->connection->insert_id;
@@ -302,7 +303,8 @@
                     $sql .= " WHERE (".implode(") AND (", $parts).")";
                     unset($parts, $part);
 //                    }
-
+                    
+                    FileLogger::log($sql);
                     $resutl = $this->query($sql);
 
                     $out = $this->connection->insert_id;
