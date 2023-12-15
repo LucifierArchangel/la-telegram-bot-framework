@@ -23,17 +23,19 @@ class ParamsResolver {
                 $type = $param->getType();
                 $name = $param->getName();
 
-                if ($type && $type instanceof ReflectionNamedType) {
-                    $reflectionInstance = $this->getClassInstance($type);
-
-                    return $reflectionInstance;
+                if (array_key_exists($name, $this->args)) {
+                    return $this->args[$name];
                 } else {
-                    if (array_key_exists($name, $this->args)) {
-                        return $this->args[$name];
+                    if ($type && $type instanceof ReflectionNamedType) {
+                        $reflectionInstance = $this->getClassInstance($type);
+
+                        return $reflectionInstance;
                     } else {
                         return $param->getDefaultValue();
                     }
                 }
+
+
             },
             $this->parameters
         );
