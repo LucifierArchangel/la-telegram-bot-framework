@@ -69,6 +69,7 @@
          * @throws Exception
          */
         public function query(string $sql, array $substitutions=[]): mysqli_result|bool {
+            FileLogger::log(print_r($sql, true));
             if ($substitutions) {
                 $sql = $this->substitute($sql, $substitutions);
             }
