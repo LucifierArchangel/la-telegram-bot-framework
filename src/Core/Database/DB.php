@@ -3,6 +3,7 @@
     namespace Lucifier\Framework\Core\Database;
 
     use Exception;
+    use Lucifier\Framework\Utils\Logger\FileLogger;
     use mysqli;
     use mysqli_result;
 
@@ -333,6 +334,8 @@
 
                         $sql = substr($sql, 0, -2);
                     }
+
+                    FileLogger::log($sql);
 
                     $this->query($sql);
 
