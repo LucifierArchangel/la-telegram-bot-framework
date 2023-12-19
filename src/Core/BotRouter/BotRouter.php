@@ -2,9 +2,7 @@
 
     namespace Lucifier\Framework\Core\BotRouter;
 
-    use Lucifier\Framework\Core\DIContainer\DIContainer;
     use Lucifier\Framework\Core\IoC\Container;
-    use Lucifier\Framework\Utils\Logger\FileLogger;
     use ReflectionException;
     use TelegramBot\Api\Client;
     use TelegramBot\Api\Types\Message;
@@ -144,7 +142,6 @@
                 $data = $this->getCallbackWithoutParameters($callback->getData());
             }
 
-            FileLogger::log(print_r($type, true));
             foreach ($this->routers as $router) {
                 if ($type === 'text') {
                     $matcher = "/".$router["text"]."/";
