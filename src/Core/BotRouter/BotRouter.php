@@ -144,18 +144,41 @@
                 $data = $this->getCallbackWithoutParameters($callback->getData());
             }
 
+            FileLogger::log(print_r($type, true));
             foreach ($this->routers as $router) {
-                if ($router["type"] === $type) {
-                    if ($data === $router["text"]) {
+                if ($type === 'text') {
+                    $matcher = "/".$router["text"]."/";
+                    preg_match($matcher, $data, $matches, PREG_OFFSET_CAPTURE);
+
+                    if (count($matches) !== 0) {
                         $controllerInstance = $instance->resolve($router["action"][0], [
                             "bot" => $bot,
-                            "update" => $update,
+                            "update" => $update
                         ]);
                         $instance->resolveMethod($controllerInstance, $router["action"][1], [
                             "bot" => $bot,
-                            "update" => $update,
+                            "update" => $update
                         ]);
+
+                        break;
                     }
+
+                } else {
+                    if ($router["type"] === $type) {
+                        if ($data === $router["text"]) {
+                            $controllerInstance = $instance->resolve($router["action"][0], [
+                                "bot" => $bot,
+                                "update" => $update,
+                            ]);
+                            $instance->resolveMethod($controllerInstance, $router["action"][1], [
+                                "bot" => $bot,
+                                "update" => $update,
+                            ]);
+
+                            break;
+                        }
+                    }
+
                 }
             }
         }
