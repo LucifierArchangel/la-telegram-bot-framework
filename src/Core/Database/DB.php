@@ -258,7 +258,7 @@
                     $sql .= " VALUES () ";
                 }
 
-                FileLogger::log($sql);
+                //FileLogger::log($sql);
                 $result = $this->query($sql);
 
                 $out = $this->connection->insert_id;
