@@ -3,7 +3,6 @@
 namespace Lucifier\Framework\Core\BotRouter;
 
 use Lucifier\Framework\Core\IoC\Container;
-use Lucifier\Framework\Utils\Logger\FileLogger;
 use ReflectionException;
 use TelegramBot\Api\Client;
 use TelegramBot\Api\Types\Message;
@@ -138,17 +137,17 @@ class BotRouter {
         $data = "";
         if (isset($message)) {
             $data = $message->getText();
-            // $data = str_replace("/", "", $data);
+            $data = str_replace("/", "", $data);
         } else if (isset($callback)) {
             $data = $this->getCallbackWithoutParameters($callback->getData());
         }
 
-        foreach ($this->routers as $value => $router) {
+        foreach ($this->routers as $router) {
             if ($type === 'text') {
                 $matcher = "/".$router["text"]."/";
-                // preg_match($matcher, $data, $matches, PREG_OFFSET_CAPTURE);
+                preg_match($matcher, $data, $matches, PREG_OFFSET_CAPTURE);
 
-                if ($router["text"] === $data){
+                if (count($matches) !== 0) {
                     $controllerInstance = $instance->resolve($router["action"][0], [
                         "bot" => $bot,
                         "update" => $update
@@ -160,23 +159,10 @@ class BotRouter {
 
                     break;
                 }
-                /*   if (count($matches) !== 0) {
-                       $controllerInstance = $instance->resolve($router["action"][0], [
-                           "bot" => $bot,
-                           "update" => $update
-                       ]);
-                       $instance->resolveMethod($controllerInstance, $router["action"][1], [
-                           "bot" => $bot,
-                           "update" => $update
-                       ]);
-
-                       break;
-                   }*/
 
             } else {
                 if ($router["type"] === $type) {
                     if ($data === $router["text"]) {
-
                         $controllerInstance = $instance->resolve($router["action"][0], [
                             "bot" => $bot,
                             "update" => $update,
@@ -185,6 +171,7 @@ class BotRouter {
                             "bot" => $bot,
                             "update" => $update,
                         ]);
+
                         break;
                     }
                 }
