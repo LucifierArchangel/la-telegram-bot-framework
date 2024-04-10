@@ -2,6 +2,8 @@
 
 namespace Lucifier\Framework\Core\View;
 
+use http\Encoding\Stream\Inflate;
+use http\Exception;
 use Lucifier\Framework\Keyboard\Keyboard;
 use Lucifier\Framework\Message\Message;
 use TelegramBot\Api\Client;
@@ -48,9 +50,9 @@ class View {
      *
      * @param array $message   message's parameters array
      * @param array $keyboard  keyboard's parameters array
-     * @return void
+     * @return bool|string
      */
-    public function show($message=[], $keyboard=[]): void {
+    public function show($message=[], $keyboard=[]): bool|string {
         $currentMessage = $this->update->getMessage();
 
 
@@ -83,17 +85,23 @@ class View {
             }
 
             if ($this->message->getType() === "send") {
+
+                if ($callback) {
+                    $this->bot->answerCallbackQuery($currentMessage->getId());
+                }
+
                 if ($msgId && $callback) {
-                    $this->bot->editMessageText($chatId,$msgId,$text,"HTML",$this->message->getPreview(),$answerKeyboard);
+                    try {
+                        $this->bot->editMessageText($chatId,$msgId,$text,"HTML",$this->message->getPreview(),$answerKeyboard);
+                    } catch (\Exception $e) {
+                        return $e;
+                    }
                 }else{
                     $this->bot->sendMessage($chatId, $text, "HTML", $this->message->getPreview(), null, $answerKeyboard);
                 }
             }
-
-            if ($callback){
-                $this->bot->answerCallbackQuery($currentMessage->getId());
-            }
         }
+        return true;
     }
 }
 
