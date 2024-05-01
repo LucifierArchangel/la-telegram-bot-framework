@@ -69,7 +69,6 @@
          * @throws Exception
          */
         public function query(string $sql, array $substitutions=[]): mysqli_result|bool {
-            FileLogger::log(print_r($sql, true));
             if ($substitutions) {
                 $sql = $this->substitute($sql, $substitutions);
             }
@@ -258,7 +257,6 @@
                     $sql .= " VALUES () ";
                 }
 
-                //FileLogger::log($sql);
                 $result = $this->query($sql);
 
                 $out = $this->connection->insert_id;
@@ -304,8 +302,7 @@
                     $sql .= " WHERE (".implode(") AND (", $parts).")";
                     unset($parts, $part);
 //                    }
-                    
-                    FileLogger::log($sql);
+
                     $resutl = $this->query($sql);
 
                     $out = $this->connection->insert_id;
@@ -338,7 +335,6 @@
                         $sql = substr($sql, 0, -2);
                     }
 
-                    FileLogger::log($sql);
 
                     $this->query($sql);
 
