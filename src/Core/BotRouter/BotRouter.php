@@ -53,6 +53,19 @@ class BotRouter {
     }
 
     /**
+     * Add new text handler
+     *
+     * @param string $action    handler for text action
+     * @return void
+     */
+    public function media(array $action): void {
+        $this->routers[] = array(
+            "type" => "media",
+            "action" => [$action[0], $action[1] ?? "__invoke"]
+        );
+    }
+
+    /**
      * Add new callback handler
      *
      * @param string $callback   callback's string
@@ -137,7 +150,11 @@ class BotRouter {
         $data = "";
         if (isset($message)) {
             $data = $message->getText();
-            $data = str_replace("/", "", $data);
+            if (isset($data) && !empty($data)) {
+                $data = str_replace("/", "", $data);
+            } else {
+                $type = 'media';
+            }
         } else if (isset($callback)) {
             $data = $this->getCallbackWithoutParameters($callback->getData());
         }
@@ -160,7 +177,7 @@ class BotRouter {
                     break;
                 }
 
-            } else {
+            } else if ($type === 'callback'){
                 if ($router["type"] === $type) {
                     if ($data === $router["text"]) {
                         $controllerInstance = $instance->resolve($router["action"][0], [
@@ -176,6 +193,17 @@ class BotRouter {
                     }
                 }
 
+            } else if ($router["type"] === 'media') {
+                $controllerInstance = $instance->resolve($router["action"][0], [
+                    "bot" => $bot,
+                    "update" => $update
+                ]);
+                $instance->resolveMethod($controllerInstance, $router["action"][1], [
+                    "bot" => $bot,
+                    "update" => $update
+                ]);
+
+                break;
             }
         }
     }
