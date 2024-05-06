@@ -177,7 +177,7 @@ class BotRouter {
                     break;
                 }
 
-            } else if ($type === 'callback'){
+            } else if ($type === 'callback' || $type === 'command'){
                 if ($router["type"] === $type) {
                     if ($data === $router["text"]) {
                         $controllerInstance = $instance->resolve($router["action"][0], [
