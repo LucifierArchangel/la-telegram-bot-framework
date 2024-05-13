@@ -52,7 +52,7 @@ class View {
      * @param array $keyboard  keyboard's parameters array
      * @return bool|string
      */
-    public function show($message=[], $keyboard=[]): bool|string {
+    public function show($message=[], $keyboard=[], $media=[]): bool|string {
         $currentMessage = $this->update->getMessage();
 
 
@@ -65,6 +65,9 @@ class View {
             $callback = true;
             $currentMessage = $this->update->getCallbackQuery();
             $msgId = $currentMessage->getMessage()->getMessageId();
+            $photo = $currentMessage->getMessage()->getPhoto();
+            $video = $currentMessage->getMessage()->getVideo();
+            $gif = $currentMessage->getMessage()->getAnimation();
             if (isset($currentMessage)) {
                 $chatId = $currentMessage->getMessage()->getChat()->getId();
             }
@@ -92,7 +95,29 @@ class View {
 
                 if ($msgId && $callback) {
                     try {
-                        $this->bot->editMessageText($chatId,$msgId,$text,"HTML",$this->message->getPreview(),$answerKeyboard);
+                        if (isset($media['photo']) || isset($media['video']) || isset($media['gif']) || isset($photo) || isset($video) || isset($gif)) $this->bot->deleteMessage($chatId, $msgId);
+                    } catch (\Exception $e) {
+                        return $e;
+                    }
+
+                    try {
+                        if (isset($media['photo']) || isset($media['video']) || isset($media['gif'])) {
+                            if (isset($media['photo'])) {
+                                $this->bot->sendPhoto($chatId, $media['photo'], $text, null, $answerKeyboard, false, "HTML", $messageThreadId = null, $protectContent = null, $allowSendingWithoutReply = null);
+                            }
+                            if (isset($media['video'])) {
+                                $this->bot->sendVideo($chatId, $media['video'], null, $text, null, $answerKeyboard, false, false, "HTML", $messageThreadId = null, $protectContent = null, $allowSendingWithoutReply = null, null);
+                            }
+                            if (isset($media['gif'])) {
+                                $this->bot->sendAnimation($chatId, $media['gif'], null, $text, null, $answerKeyboard, false, "HTML", $messageThreadId = null, $protectContent = null, $allowSendingWithoutReply = null, null);
+                            }
+                        } else {
+                            if (isset($photo) || isset($video) || isset($gif)){
+                                $this->bot->sendMessage($chatId, $text, "HTML", $this->message->getPreview(), null, $answerKeyboard);
+                            } else {
+                                $this->bot->editMessageText($chatId, $msgId, $text, "HTML", $this->message->getPreview(), $answerKeyboard);
+                            }
+                        }
                     } catch (\Exception $e) {
                         return $e;
                     }
