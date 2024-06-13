@@ -21,7 +21,8 @@ class BotRouter {
         'command'            => [],
         'callback'           => [],
         'media'              => [],
-        'pre_checkout_query' => []
+        'pre_checkout_query' => [],
+        'contact'            => []
     ];
 
     /**
@@ -58,6 +59,11 @@ class BotRouter {
     public function text(string $text, array $action): void
     {
         $this->addRouter('text', $text, $action);
+    }
+
+    public function contact(array $action): void
+    {
+        $this->addRouter('contact', '', $action);
     }
 
     /**
@@ -160,6 +166,12 @@ class BotRouter {
                     break;
                 }
             }
+        } else if ($type === 'contact') {
+            if (!empty($this->compiledRouters['contact'])) {
+                $this->executeRoute($instance, [
+                    'action' => $this->compiledRouters['contact']['']
+                ], $bot, $update);
+            }
         } else {
             if (isset($this->compiledRouters[$type][$data])) {
                 $this->executeRoute($instance, [
@@ -175,10 +187,14 @@ class BotRouter {
             return 'pre_checkout_query';
         }
         if ($message) {
+            if ($message->getContact()) {
+                return 'contact';
+            }
             return $this->isCommandMessage($message) ? 'command' : 'text';
         }
         return 'callback';
     }
+
 
     private function extractData($message, $callback, $type): string
     {
@@ -189,8 +205,12 @@ class BotRouter {
         if ($type === 'callback') {
             return $this->getCallbackWithoutParameters($callback->getData());
         }
+        if ($type === 'contact') {
+            return $message->getContact()->getPhoneNumber();
+        }
         return '';
     }
+
 
     private function executeRoute(
         $instance,
