@@ -35,8 +35,16 @@
          * @param string $data   inline button data (callback string or url address)
          * @return $this
          */
-        public function addButton(string $type="inline", string $text="Example Text", string $data=""): static {
-            $this->rows[count($this->rows) - 1]->addButton($type, $text, $data);
+        public function addButton(string $type = 'inline', string $text = 'Example Text', string $data = ''): static
+        {
+            if (mb_strlen($data, '8bit') > 64) {
+                throw new \InvalidArgumentException('The $data parameter exceeds 64 bytes.');
+            }
+
+            $lastRowKey = array_key_last($this->rows);
+            $lastRow = $this->rows[$lastRowKey];
+
+            $lastRow->addButton($type, $text, $data);
 
             return $this;
         }
