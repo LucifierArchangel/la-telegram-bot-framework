@@ -101,6 +101,13 @@ class BotRouter {
         $this->addRouter('command', $command, $action);
     }
 
+    private function extractCommandArguments(string $commandText): array
+    {
+        $parts = explode(' ', $commandText);
+        array_shift($parts);
+        return $parts;
+    }
+
     /**
      * Add new preCheckoutQuery handler
      *
@@ -178,6 +185,14 @@ class BotRouter {
                     'action' => $this->compiledRouters[$type][$data]
                 ], $bot, $update);
             }
+            else if ($type === 'command' && strpos($data, 'start') === 0) {
+                $arguments = $this->extractCommandArguments($data);
+                if (isset($this->compiledRouters[$type]['start'])) {
+                    $this->executeRoute($instance, [
+                        'action' => $this->compiledRouters[$type]['start']
+                    ], $bot, $update, $arguments);
+                }
+            }
         }
     }
 
@@ -200,7 +215,11 @@ class BotRouter {
     {
         if ($type === 'text' || $type === 'command') {
             $data = $message->getText();
-            return $data ? str_replace('/', '', $data) : '';
+            if ($data) {
+                $command = str_replace('/', '', $data);
+                return $command;
+            }
+            return '';
         }
         if ($type === 'callback') {
             return $this->getCallbackWithoutParameters($callback->getData());
@@ -211,20 +230,22 @@ class BotRouter {
         return '';
     }
 
-
     private function executeRoute(
         $instance,
         $router,
         $bot,
-        $update
+        $update,
+        $arguments = []
     ): void {
         $controllerInstance = $instance->resolve($router['action'][0], [
-            'bot'    => $bot,
-            'update' => $update
+            'bot'       => $bot,
+            'update'    => $update,
+            'arguments' => $arguments
         ]);
         $instance->resolveMethod($controllerInstance, $router['action'][1], [
-            'bot'    => $bot,
-            'update' => $update
+            'bot'       => $bot,
+            'update'    => $update,
+            'arguments' => $arguments
         ]);
     }
 
