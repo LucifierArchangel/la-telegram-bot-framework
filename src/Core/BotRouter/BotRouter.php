@@ -22,6 +22,7 @@ class BotRouter {
         'callback'           => [],
         'media'              => [],
         'pre_checkout_query' => [],
+        'my_chat_member'     => [],
         'contact'            => []
     ];
 
@@ -120,6 +121,17 @@ class BotRouter {
     }
 
     /**
+     * Add new myChatMember handler
+     *
+     * @param array $action handler for preCheckoutQuery action
+     * @return void
+     */
+    public function myChatMember(array $action): void
+    {
+        $this->addRouter('my_chat_member', '', $action);
+    }
+
+    /**
      * Add new router and compile it
      *
      * @param string $type   router type
@@ -161,8 +173,9 @@ class BotRouter {
         $message = $update->getMessage();
         $callback = $update->getCallbackQuery();
         $preCheckoutQuery = $update->getPreCheckoutQuery();
+        $myChatMember = $update->getMyChatMember();
 
-        $type = $this->determineType($message, $callback, $preCheckoutQuery);
+        $type = $this->determineType($message, $callback, $preCheckoutQuery, $myChatMember);
 
         $data = $this->extractData($message, $callback, $type);
 
@@ -177,6 +190,12 @@ class BotRouter {
             if (!empty($this->compiledRouters['contact'])) {
                 $this->executeRoute($instance, [
                     'action' => $this->compiledRouters['contact']['']
+                ], $bot, $update);
+            }
+        } else if ($type === 'my_chat_member') {
+            if (!empty($this->compiledRouters['my_chat_member'])) {
+                $this->executeRoute($instance, [
+                    'action' => $this->compiledRouters['my_chat_member']['']
                 ], $bot, $update);
             }
         } else {
@@ -196,10 +215,13 @@ class BotRouter {
         }
     }
 
-    private function determineType($message, $callback, $preCheckoutQuery): string
+    private function determineType($message, $callback, $preCheckoutQuery, $myChatMember): string
     {
         if ($preCheckoutQuery) {
             return 'pre_checkout_query';
+        }
+        if ($myChatMember) {
+            return 'my_chat_member';
         }
         if ($message) {
             if ($message->getContact()) {
