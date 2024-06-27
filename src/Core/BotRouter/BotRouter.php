@@ -198,13 +198,18 @@ class BotRouter {
                     'action' => $this->compiledRouters['my_chat_member']['']
                 ], $bot, $update);
             }
+        } else if ($type === 'media') {
+            if (!empty($this->compiledRouters['media'])) {
+                $this->executeRoute($instance, [
+                    'action' => $this->compiledRouters['media']['']
+                ], $bot, $update);
+            }
         } else {
             if (isset($this->compiledRouters[$type][$data])) {
                 $this->executeRoute($instance, [
                     'action' => $this->compiledRouters[$type][$data]
                 ], $bot, $update);
-            }
-            else if ($type === 'command' && strpos($data, 'start') === 0) {
+            } else if ($type === 'command' && strpos($data, 'start') === 0) {
                 $arguments = $this->extractCommandArguments($data);
                 if (isset($this->compiledRouters[$type]['start'])) {
                     $this->executeRoute($instance, [
@@ -227,11 +232,13 @@ class BotRouter {
             if ($message->getContact()) {
                 return 'contact';
             }
+            if ($message->getPhoto() || $message->getVideo() || $message->getDocument()) {
+                return 'media';
+            }
             return $this->isCommandMessage($message) ? 'command' : 'text';
         }
         return 'callback';
     }
-
 
     private function extractData($message, $callback, $type): string
     {
@@ -248,6 +255,17 @@ class BotRouter {
         }
         if ($type === 'contact') {
             return $message->getContact()->getPhoneNumber();
+        }
+        if ($type === 'media') {
+            if ($message->getPhoto()) {
+                return 'photo';
+            }
+            if ($message->getVideo()) {
+                return 'video';
+            }
+            if ($message->getDocument()) {
+                return 'document';
+            }
         }
         return '';
     }
