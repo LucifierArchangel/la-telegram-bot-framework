@@ -59,6 +59,7 @@ class View {
         $chatId = null;
         $msgId = null;
         $callback = false;
+        $canEdit = true;
         if(isset($currentMessage)) {
             $chatId = $currentMessage->getChat()->getId();
         } else {
@@ -81,7 +82,9 @@ class View {
 
             if (isset($this->keyboard)) {
                 $answerKeyboard = $this->keyboard->build($keyboard);
-
+                if ($callback && $this->keyboard->getType() !== 'inline') {
+                    $canEdit = false;
+                }
                 $answerKeyboard = $this->keyboard->getType() === "inline" ?
                     new InlineKeyboardMarkup($answerKeyboard) :
                     new ReplyKeyboardMarkup($answerKeyboard, false, true);
@@ -112,7 +115,7 @@ class View {
                                 $this->bot->sendAnimation($chatId, $media['gif'], null, $text, null, $answerKeyboard, false, "HTML", $messageThreadId = null, $protectContent = null, $allowSendingWithoutReply = null, null);
                             }
                         } else {
-                            if (isset($photo) || isset($video) || isset($gif)){
+                            if (isset($photo) || isset($video) || isset($gif) || !$canEdit) {
                                 $this->bot->sendMessage($chatId, $text, "HTML", $this->message->getPreview(), null, $answerKeyboard);
                             } else {
                                 $this->bot->editMessageText($chatId, $msgId, $text, "HTML", $this->message->getPreview(), $answerKeyboard);
