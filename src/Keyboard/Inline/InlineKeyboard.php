@@ -37,7 +37,7 @@
          */
         public function addButton(string $type = 'inline', string $text = 'Example Text', string $data = ''): static
         {
-            if (mb_strlen($data, '8bit') > 64) {
+            if ($type !== 'url' && mb_strlen($data, '8bit') > 64) {
                 throw new \InvalidArgumentException('The $data parameter exceeds 64 bytes.');
             }
 
