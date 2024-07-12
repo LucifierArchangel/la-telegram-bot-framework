@@ -2,12 +2,15 @@
 namespace Lucifier\Framework\Core\BotRouter;
 
 use Lucifier\Framework\Core\IoC\Container;
+use Lucifier\Framework\Core\Middleware\Middleware;
 use ReflectionException;
 use TelegramBot\Api\Client;
 use TelegramBot\Api\Types\Message;
 use TelegramBot\Api\Types\Update;
+use Dotenv\Dotenv;
 
-class BotRouter {
+class BotRouter extends Middleware
+{
     /**
      * @var array bot's routers array
      */
@@ -26,6 +29,8 @@ class BotRouter {
         'contact'            => []
     ];
 
+    protected array $currentRouter = [];
+
     /**
      * @var string bot's namespace
      */
@@ -36,7 +41,12 @@ class BotRouter {
      */
     private string $originalNamespace;
 
-    public function __construct() {}
+    private int|string $chatId;
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
 
     /**
      * Set namespace for current bot router
@@ -55,13 +65,67 @@ class BotRouter {
      *
      * @param string $text      text's string
      * @param array  $action    handler for text action
-     * @return void
+     * @return self
      */
-    public function text(string $text, array $action): void
+    public function text(string $text, array $action): self
     {
-        $this->addRouter('text', $text, $action);
+        $this->currentRouter = [
+            'type'       => 'text',
+            'text'       => $text,
+            'action'     => [$action[0], $action[1] ?? '__invoke'],
+            'middleware' => []
+        ];
+        $this->addRouter(
+            $this->currentRouter['type'],
+            $this->currentRouter['text'],
+            $this->currentRouter['action'],
+            $this->currentRouter['middleware']
+        );
+        return $this;
     }
 
+    /**
+     * Add middleware to the current router
+     *
+     * @param string $middleware middleware class name
+     * @return self
+     */
+    public function middleware(string $middleware): self
+    {
+        $this->currentRouter['middleware'][] = [Middleware::class, $middleware];
+        $this->updateRouterWithMiddleware();
+        return $this;
+    }
+
+    /**
+     * Update router with middleware
+     *
+     * @return void
+     */
+    private function updateRouterWithMiddleware(): void
+    {
+        foreach ($this->routers as &$router) {
+            if (
+                $router['type'] === $this->currentRouter['type']
+                && $router['text'] === $this->currentRouter['text']
+            ) {
+                $router['middleware'] = $this->currentRouter['middleware'];
+            }
+        }
+
+        foreach ($this->compiledRouters['text'] as &$compiledRouter) {
+            if ($compiledRouter['pattern'] === '/' . $this->currentRouter['text'] . '/') {
+                $compiledRouter['middleware'] = $this->currentRouter['middleware'];
+            }
+        }
+    }
+
+    /**
+     * Add new contact handler
+     *
+     * @param array $action handler for contact action
+     * @return void
+     */
     public function contact(array $action): void
     {
         $this->addRouter('contact', '', $action);
@@ -102,6 +166,12 @@ class BotRouter {
         $this->addRouter('command', $command, $action);
     }
 
+    /**
+     * Extract command arguments from command text
+     *
+     * @param string $commandText command text
+     * @return array
+     */
     private function extractCommandArguments(string $commandText): array
     {
         $parts = explode(' ', $commandText);
@@ -139,24 +209,27 @@ class BotRouter {
      * @param array  $action handler action
      * @return void
      */
-    private function addRouter(string $type, string $text, array $action): void
+    private function addRouter(string $type, string $text, array $action, array $middleware = []): void
     {
         $router = [
-            'type'   => $type,
-            'text'   => $text,
-            'action' => [$action[0], $action[1] ?? '__invoke']
+            'type'       => $type,
+            'text'       => $text,
+            'action'     => [$action[0], $action[1] ?? '__invoke'],
+            'middleware' => $middleware
         ];
         $this->routers[] = $router;
 
         if ($type === 'text') {
             $this->compiledRouters['text'][] = [
-                'pattern' => '/' . $text . '/',
-                'action'  => $router['action']
+                'pattern'    => '/' . $text . '/',
+                'action'     => $router['action'],
+                'middleware' => $middleware
             ];
         } else {
             $this->compiledRouters[$type][$text] = $router['action'];
         }
     }
+
 
     /**
      * Handle bot action with applied handlers
@@ -170,53 +243,248 @@ class BotRouter {
     {
         $instance = Container::instance();
 
+        $this->setChatIdFromUpdate($update);
+
+        if ($this->isBanned($this->chatId)) {
+            $bot->sendMessage($this->chatId, 'Вы заблокированы ❌', 'HTML', false, null);
+            return;
+        }
+
+        $type = $this->determineUpdateType($update);
+        $data = $this->extractDataFromUpdate($update, $type);
+
+        $this->processUpdate($instance, $bot, $update, $type, $data);
+    }
+
+    /**
+     * Determine update type
+     *
+     * @param Update $update current update instance
+     * @return string update type
+     */
+    private function determineUpdateType(Update $update): string
+    {
         $message = $update->getMessage();
         $callback = $update->getCallbackQuery();
         $preCheckoutQuery = $update->getPreCheckoutQuery();
         $myChatMember = $update->getMyChatMember();
 
-        $type = $this->determineType($message, $callback, $preCheckoutQuery, $myChatMember);
+        return $this->determineType($message, $callback, $preCheckoutQuery, $myChatMember);
+    }
 
-        $data = $this->extractData($message, $callback, $type);
+    /**
+     * Extract data from update based on type
+     *
+     * @param Update $update current update instance
+     * @param string $type update type
+     * @return mixed extracted data
+     */
+    private function extractDataFromUpdate(Update $update, string $type)
+    {
+        $message = $update->getMessage();
+        $callback = $update->getCallbackQuery();
+        return $this->extractData($message, $callback, $type);
+    }
 
-        if ($type === 'text') {
-            foreach ($this->compiledRouters['text'] as $router) {
-                if (preg_match($router['pattern'], $data)) {
+    /**
+     * Process update based on type
+     *
+     * @param mixed $instance instance of the container
+     * @param Client $bot current bot instance
+     * @param Update $update current update instance
+     * @param string $type update type
+     * @param mixed $data extracted data from update
+     * @return void
+     */
+    private function processUpdate(mixed $instance, Client $bot, Update $update, string $type, mixed $data): void
+    {
+        switch ($type) {
+            case 'text':
+                $this->processTextUpdate($instance, $bot, $update, $data);
+                break;
+            case 'contact':
+                $this->processContactUpdate($instance, $bot, $update);
+                break;
+            case 'my_chat_member':
+                $this->processMyChatMemberUpdate($instance, $bot, $update);
+                break;
+            case 'media':
+                $this->processMediaUpdate($instance, $bot, $update);
+                break;
+            case 'command':
+                $this->processCommandUpdate($instance, $bot, $update, $data);
+                break;
+            default:
+                $this->processDefaultUpdate($instance, $bot, $update, $type, $data);
+                break;
+        }
+    }
+
+    /**
+     * Process text update
+     *
+     * @param mixed $instance instance of the container
+     * @param Client $bot current bot instance
+     * @param Update $update current update instance
+     * @param mixed $data extracted data from update
+     * @return void
+     */
+    private function processTextUpdate(mixed $instance, Client $bot, Update $update, mixed $data): void
+    {
+        foreach ($this->compiledRouters['text'] as $router) {
+            if (preg_match($router['pattern'], $data)) {
+                if ($this->executeMiddleware($router['middleware'], $bot, $update)) {
                     $this->executeRoute($instance, $router, $bot, $update);
-                    break;
                 }
+                break;
             }
-        } else if ($type === 'contact') {
-            if (!empty($this->compiledRouters['contact'])) {
+        }
+    }
+
+    /**
+     * Execute middleware
+     *
+     * @param array $middleware list of middleware
+     * @param Client $bot current bot instance
+     * @param Update $update current update instance
+     * @return bool
+     */
+    private function executeMiddleware(array $middleware, Client $bot, Update $update): bool
+    {
+        $chatId = $update->getMessage()->getChat()->getId();
+        foreach ($middleware as $middlewareItem) {
+            [$middlewareClass, $method] = $middlewareItem;
+            $middlewareInstance = new $middlewareClass();
+            if (!$middlewareInstance->$method($chatId)) {
+                $bot->sendMessage($chatId, 'Access denied ❌', 'HTML', false, null);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Process contact update
+     *
+     * @param mixed $instance instance of the container
+     * @param Client $bot current bot instance
+     * @param Update $update current update instance
+     * @return void
+     */
+    private function processContactUpdate(mixed $instance, Client $bot, Update $update): void
+    {
+        if (!empty($this->compiledRouters['contact'])) {
+            $this->executeRoute($instance, [
+                'action' => $this->compiledRouters['contact']['']
+            ], $bot, $update);
+        }
+    }
+
+    /**
+     * Process myChatMember update
+     *
+     * @param mixed $instance instance of the container
+     * @param Client $bot current bot instance
+     * @param Update $update current update instance
+     * @return void
+     */
+    private function processMyChatMemberUpdate(mixed $instance, Client $bot, Update $update): void
+    {
+        if (!empty($this->compiledRouters['my_chat_member'])) {
+            $this->executeRoute($instance, [
+                'action' => $this->compiledRouters['my_chat_member']['']
+            ], $bot, $update);
+        }
+    }
+
+    /**
+     * Process media update
+     *
+     * @param mixed $instance instance of the container
+     * @param Client $bot current bot instance
+     * @param Update $update current update instance
+     * @return void
+     */
+    private function processMediaUpdate(mixed $instance, Client $bot, Update $update): void
+    {
+        if (!empty($this->compiledRouters['media'])) {
+            $this->executeRoute($instance, [
+                'action' => $this->compiledRouters['media']['']
+            ], $bot, $update);
+        }
+    }
+
+    /**
+     * Process command update
+     *
+     * @param mixed $instance instance of the container
+     * @param Client $bot current bot instance
+     * @param Update $update current update instance
+     * @param string $data extracted data from update
+     * @return void
+     */
+    private function processCommandUpdate(mixed $instance, Client $bot, Update $update, string $data): void
+    {
+        if (strpos($data, 'start') === 0) {
+            $arguments = $this->extractCommandArguments($data);
+            if (isset($this->compiledRouters['command']['start'])) {
                 $this->executeRoute($instance, [
-                    'action' => $this->compiledRouters['contact']['']
-                ], $bot, $update);
+                    'action' => $this->compiledRouters['command']['start']
+                ], $bot, $update, $arguments);
             }
-        } else if ($type === 'my_chat_member') {
-            if (!empty($this->compiledRouters['my_chat_member'])) {
-                $this->executeRoute($instance, [
-                    'action' => $this->compiledRouters['my_chat_member']['']
-                ], $bot, $update);
-            }
-        } else if ($type === 'media') {
-            if (!empty($this->compiledRouters['media'])) {
-                $this->executeRoute($instance, [
-                    'action' => $this->compiledRouters['media']['']
-                ], $bot, $update);
-            }
+        }
+    }
+
+    /**
+     * Process default update
+     *
+     * @param mixed $instance instance of the container
+     * @param Client $bot current bot instance
+     * @param Update $update current update instance
+     * @param string $type update type
+     * @param mixed $data extracted data from update
+     * @return void
+     */
+    private function processDefaultUpdate(mixed $instance, Client $bot, Update $update, string $type, mixed $data): void
+    {
+        if (isset($this->compiledRouters[$type][$data])) {
+            $this->executeRoute($instance, [
+                'action' => $this->compiledRouters[$type][$data]
+            ], $bot, $update);
+        }
+    }
+
+
+    /**
+     * Set chatId from Update
+     *
+     * @param Update $update
+     * @return void
+     */
+    protected function setChatIdFromUpdate(Update $update): void
+    {
+        if ($update->getMessage()) {
+            $this->chatId = $update->getMessage()->getChat()->getId();
+        } elseif ($update->getCallbackQuery()) {
+            $this->chatId = $update->getCallbackQuery()->getMessage()->getChat()->getId();
+        } elseif ($update->getEditedMessage()) {
+            $this->chatId = $update->getEditedMessage()->getChat()->getId();
+        } elseif ($update->getChannelPost()) {
+            $this->chatId = $update->getChannelPost()->getChat()->getId();
+        } elseif ($update->getEditedChannelPost()) {
+            $this->chatId = $update->getEditedChannelPost()->getChat()->getId();
+        } elseif ($update->getInlineQuery()) {
+            $this->chatId = $update->getInlineQuery()->getFrom()->getId();
+        } elseif ($update->getChosenInlineResult()) {
+            $this->chatId = $update->getChosenInlineResult()->getFrom()->getId();
+        } elseif ($update->getShippingQuery()) {
+            $this->chatId = $update->getShippingQuery()->getFrom()->getId();
+        } elseif ($update->getPreCheckoutQuery()) {
+            $this->chatId = $update->getPreCheckoutQuery()->getFrom()->getId();
+        } elseif ($update->getPollAnswer()) {
+            $this->chatId = $update->getPollAnswer()->getUser()->getId();
         } else {
-            if (isset($this->compiledRouters[$type][$data])) {
-                $this->executeRoute($instance, [
-                    'action' => $this->compiledRouters[$type][$data]
-                ], $bot, $update);
-            } else if ($type === 'command' && strpos($data, 'start') === 0) {
-                $arguments = $this->extractCommandArguments($data);
-                if (isset($this->compiledRouters[$type]['start'])) {
-                    $this->executeRoute($instance, [
-                        'action' => $this->compiledRouters[$type]['start']
-                    ], $bot, $update, $arguments);
-                }
-            }
+            $this->chatId = null;
         }
     }
 
