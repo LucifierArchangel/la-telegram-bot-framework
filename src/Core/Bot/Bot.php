@@ -34,6 +34,11 @@ class Bot
      */
     protected ?int $botId;
 
+    /**
+     * @var ?Update $update
+     */
+    protected static ?Update $update = null;
+
     public function __construct()
     {
         $this->router = new BotRouter();
@@ -42,6 +47,16 @@ class Bot
     public function setBotId(?int $botId):void
     {
         $this->botId = $botId;
+    }
+
+    /**
+     * Static method to initialize the Update object
+     *
+     * @return void
+     */
+    public static function initializeUpdate(): void
+    {
+        self::$update = Update::fromResponse(json_decode(file_get_contents('php://input'), true));
     }
 
     /**
