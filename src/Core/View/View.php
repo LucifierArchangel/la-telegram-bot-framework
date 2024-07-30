@@ -8,10 +8,12 @@ use Lucifier\Framework\Keyboard\Keyboard;
 use Lucifier\Framework\Message\Message;
 use TelegramBot\Api\Client;
 use TelegramBot\Api\Types\Inline\InlineKeyboardMarkup;
+use TelegramBot\Api\Types\InputMedia\ArrayOfInputMedia;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 use TelegramBot\Api\Types\Update;
 
-class View {
+class View
+{
     /**
      * @var Message message instance for bot
      */
@@ -32,7 +34,8 @@ class View {
      */
     protected Update $update;
 
-    public function __construct($update, $bot) {
+    public function __construct($update, $bot)
+    {
         $this->update = $update;
         $this->bot = $bot;
     }
@@ -43,32 +46,35 @@ class View {
      *
      * @return void
      */
-    public function configure() {}
+    public function configure()
+    {
+    }
 
     /**
      * Show current view
      *
-     * @param array $message   message's parameters array
-     * @param array $keyboard  keyboard's parameters array
+     * @param $message message's parameters array
+     * @param $keyboard keyboard's parameters array
      * @return bool|string
+     * @throws \Exception
      */
-    public function show($message=[], $keyboard=[], $media=[]): bool|string {
+    public function show(
+        $message = [],
+        $keyboard = [],
+        $media = []
+    ): bool|string {
         $currentMessage = $this->update->getMessage();
-
-
         $chatId = null;
         $msgId = null;
         $callback = false;
         $canEdit = true;
-        if(isset($currentMessage)) {
+
+        if (isset($currentMessage)) {
             $chatId = $currentMessage->getChat()->getId();
         } else {
             $callback = true;
             $currentMessage = $this->update->getCallbackQuery();
             $msgId = $currentMessage->getMessage()->getMessageId();
-            $photo = $currentMessage->getMessage()->getPhoto();
-            $video = $currentMessage->getMessage()->getVideo();
-            $gif = $currentMessage->getMessage()->getAnimation();
             if (isset($currentMessage)) {
                 $chatId = $currentMessage->getMessage()->getChat()->getId();
             }
@@ -77,7 +83,7 @@ class View {
         if (isset($chatId)) {
             $this->configure();
 
-            $text = $this->message->run($message);
+            $text = $this->message->run($message) ?? null;
             $answerKeyboard = null;
 
             if (isset($this->keyboard)) {
@@ -85,52 +91,79 @@ class View {
                 if ($callback && $this->keyboard->getType() !== 'inline') {
                     $canEdit = false;
                 }
-                $answerKeyboard = $this->keyboard->getType() === "inline" ?
-                    new InlineKeyboardMarkup($answerKeyboard) :
-                    new ReplyKeyboardMarkup($answerKeyboard, false, true);
+                $answerKeyboard = $this->keyboard->getType() === 'inline'
+                    ? new InlineKeyboardMarkup($answerKeyboard)
+                    : new ReplyKeyboardMarkup($answerKeyboard, false, true);
             }
 
-            if ($this->message->getType() === "send") {
+            if ($this->message->getType() === 'send') {
+
+                if ($msgId && $callback) {
+                    $this->bot->deleteMessage($chatId, $msgId);
+                }
 
                 if ($callback) {
                     $this->bot->answerCallbackQuery($currentMessage->getId());
                 }
 
-                if ($msgId && $callback) {
-                    try {
-                        if (isset($media['photo']) || isset($media['video']) || isset($media['gif']) || isset($photo) || isset($video) || isset($gif)) $this->bot->deleteMessage($chatId, $msgId);
-                    } catch (\Exception $e) {
-                        return $e;
+                try {
+                    if (isset($media['photo'])) {
+                        $this->bot->sendPhoto(
+                            $chatId,
+                            $media['photo'],
+                            $text,
+                            null,
+                            $answerKeyboard,
+                            false,
+                            "HTML",
+                            $messageThreadId = null,
+                            $protectContent = null,
+                            $allowSendingWithoutReply = null);
                     }
-
-                    try {
-                        if (isset($media['photo']) || isset($media['video']) || isset($media['gif'])) {
-                            if (isset($media['photo'])) {
-                                $this->bot->sendPhoto($chatId, $media['photo'], $text, null, $answerKeyboard, false, "HTML", $messageThreadId = null, $protectContent = null, $allowSendingWithoutReply = null);
-                            }
-                            if (isset($media['video'])) {
-                                $this->bot->sendVideo($chatId, $media['video'], null, $text, null, $answerKeyboard, false, false, "HTML", $messageThreadId = null, $protectContent = null, $allowSendingWithoutReply = null, null);
-                            }
-                            if (isset($media['gif'])) {
-                                $this->bot->sendAnimation($chatId, $media['gif'], null, $text, null, $answerKeyboard, false, "HTML", $messageThreadId = null, $protectContent = null, $allowSendingWithoutReply = null, null);
-                            }
-                        } else {
-                            if (isset($photo) || isset($video) || isset($gif) || !$canEdit) {
-                                $this->bot->sendMessage($chatId, $text, "HTML", $this->message->getPreview(), null, $answerKeyboard);
-                            } else {
-                                $this->bot->editMessageText($chatId, $msgId, $text, "HTML", $this->message->getPreview(), $answerKeyboard);
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        return $e;
+                    if (isset($media['video'])) {
+                        $this->bot->sendVideo(
+                            $chatId,
+                            $media['video'],
+                            null,
+                            $text,
+                            null,
+                            $answerKeyboard,
+                            false,
+                            false,
+                            "HTML",
+                            $messageThreadId = null,
+                            $protectContent = null,
+                            $allowSendingWithoutReply = null,
+                            null);
                     }
-                }else{
-                    $this->bot->sendMessage($chatId, $text, "HTML", $this->message->getPreview(), null, $answerKeyboard);
+                    if (isset($media['gif'])) {
+                        $this->bot->sendAnimation(
+                            $chatId,
+                            $media['gif'],
+                            null,
+                            $text,
+                            null,
+                            $answerKeyboard,
+                            false,
+                            "HTML",
+                            $messageThreadId = null,
+                            $protectContent = null,
+                            $allowSendingWithoutReply = null,
+                            null);
+                    } elseif (empty($media)) {
+                        $this->bot->sendMessage(
+                            $chatId,
+                            $text,
+                            "HTML",
+                            $this->message->getPreview(),
+                            null,
+                            $answerKeyboard);
+                    }
+                } catch (\Exception $e) {
+                    return throw new \Exception($e->getMessage());
                 }
             }
         }
         return true;
     }
 }
-
-?>
