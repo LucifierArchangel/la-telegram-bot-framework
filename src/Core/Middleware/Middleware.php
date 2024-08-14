@@ -7,24 +7,10 @@ use Dotenv\Dotenv;
 
 class Middleware
 {
-    /**
-     * @var DB Database instance
-     */
     protected DB $DB;
-
-    /**
-     * @var array Middleware configuration
-     */
     protected array $config;
 
-    /**
-     * Path to the environment file
-     */
     private const ENV_PATH = __DIR__ . '/../../../../../../';
-
-    /**
-     * Path to the middleware configuration file
-     */
     private const CONFIG_PATH = __DIR__ . '/../../../config/middlewareConfig.php';
 
     public function __construct()
@@ -33,11 +19,6 @@ class Middleware
         $this->loadConfig();
     }
 
-    /**
-     * Initialize the database connection
-     *
-     * @return void
-     */
     private function initDb(): void
     {
         $dotenv = \Dotenv\Dotenv::createImmutable(self::ENV_PATH);
@@ -46,25 +27,12 @@ class Middleware
         $this->DB->openNew('db', $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], $_ENV['DB_DATABASE']);
     }
 
-    /**
-     * Load the middleware configuration
-     *
-     * @return void
-     */
     private function loadConfig(): void
     {
         $this->config = require self::CONFIG_PATH;
     }
 
-    /**
-     * Check a condition based on type and chatId
-     *
-     * @param string $type Condition type
-     * @param int|string $chatId Chat ID
-     * @return bool
-     * @throws \Exception if the middleware type is unknown
-     */
-    private function checkCondition(string $type, int|string $chatId): bool
+    private function checkCondition(string $type, int|string $chatId): bool|array
     {
         if (!isset($this->config[$type])) {
             throw new \Exception('Unknown middleware type:' . $type);
@@ -83,28 +51,30 @@ class Middleware
 
         $query = "SELECT * FROM $table WHERE $queryConditionString";
 
-        return !empty($this->DB->getTable($query));
+        return $this->DB->getTable($query);
     }
 
-    /**
-     * Check if the user is banned
-     *
-     * @param int|string $chatId Chat ID
-     * @return bool
-     */
     public function isBanned(int|string $chatId): bool
     {
-        return $this->checkCondition('isBanned', $chatId);
+        $result = $this->checkCondition('isBanned', $chatId);
+
+        return !empty($result);
     }
 
-    /**
-     * Check if the user is an admin
-     *
-     * @param int|string $chatId Chat ID
-     * @return bool
-     */
     public function isAdmin(int|string $chatId): bool
     {
-        return $this->checkCondition('isAdmin', $chatId);
+        $user = $this->checkCondition('isAdmin', $chatId);
+
+        if (empty($user)) {
+            return false;
+        }
+
+        $botId = $user['0']['botId'];
+        $ownerId = $user['0']['id'];
+
+        $query = "SELECT * FROM Bot WHERE id = '$botId' AND ownerId = '$ownerId'";
+        $bot = $this->DB->getTable($query);
+
+        return !empty($bot);
     }
 }
