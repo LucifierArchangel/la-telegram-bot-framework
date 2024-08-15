@@ -202,6 +202,25 @@ class BotRouter extends Middleware
     }
 
     /**
+     * Registers a group of routes if the specified condition is met.
+     *
+     * This method checks the provided condition, and if it returns `true`,
+     * it executes the given routes callback, allowing you to group routes
+     * under a specific condition (e.g., based on chat type, user permissions, etc.).
+     *
+     * @param callable $condition A callable that returns a boolean. If `true`, the routes are registered.
+     * @param callable $routes A callable that contains the route definitions to be registered if the condition is met.
+     *
+     * @return void
+     */
+    public function group(callable $condition, callable $routes): void
+    {
+        if ($condition()) {
+            $routes($this);
+        }
+    }
+
+    /**
      * Add new router and compile it
      *
      * @param string $type   router type
@@ -229,7 +248,6 @@ class BotRouter extends Middleware
             $this->compiledRouters[$type][$text] = $router['action'];
         }
     }
-
 
     /**
      * Handle bot action with applied handlers
