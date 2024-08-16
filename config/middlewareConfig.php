@@ -14,5 +14,12 @@ return [
             'role'    => 'ADMIN',
             'user_id' => ':chatId'
         ]
+    ],
+    'isBannedBot' => [
+        'table'       => 'Bot',
+        'conditions'  => [
+            'blocked' => 1,
+            'chatId'  => ':chatId'
+        ]
     ]
 ];

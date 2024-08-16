@@ -263,6 +263,13 @@ class BotRouter extends Middleware
         if (empty($update->getMyChatMember())) {
             $this->setChatIdFromUpdate($update);
 
+            $botId = $bot->getMe()->getId();
+
+            if ($this->isBannedBot($botId)) {
+                $bot->sendMessage($this->chatId, 'Бот заблокированы ❌', 'HTML', false, null);
+                return;
+            }
+
             if ($this->isBanned($this->chatId)) {
                 $bot->sendMessage($this->chatId, 'Вы заблокированы ❌', 'HTML', false, null);
                 return;
