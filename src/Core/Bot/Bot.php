@@ -39,6 +39,11 @@ class Bot
      */
     protected static ?Update $update = null;
 
+    /**
+     * @var int $maxRetries
+     */
+    private int $maxRetries = 3;
+
     public function __construct()
     {
         $this->router = new BotRouter();
@@ -103,6 +108,26 @@ class Bot
      */
     public function run(): void
     {
-        $this->client->run();
+        $retryCount = 0;
+
+        while ($retryCount < $this->maxRetries) {
+            try {
+                $this->client->run();
+                $retryCount = 0;
+                break;
+            } catch (HttpException $httpException) {
+                if (strpos($httpException->getMessage(), 'Could not resolve host') !== false) {
+                    $retryCount++;
+                    if ($retryCount >= $this->maxRetries) {
+                        throw new HttpException (
+                            "Failed to resolve host after {$this->maxRetries} attempts: "
+                            . $httpException->getMessage());
+                    }
+                    sleep(1);
+                } else {
+                    throw $httpException;
+                }
+            }
+        }
     }
 }
