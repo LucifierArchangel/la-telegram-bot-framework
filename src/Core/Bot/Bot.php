@@ -114,9 +114,13 @@ class Bot
             try {
                 $this->client->run();
                 $retryCount = 0;
+
                 break;
             } catch (HttpException $httpException) {
-                if (strpos($httpException->getMessage(), 'Could not resolve host') !== false) {
+                if (
+                    str_contains($httpException->getMessage(), 'Could not resolve host')
+                    || str_contains($httpException->getMessage(), 'Failed to connect to')
+                ) {
                     $retryCount++;
                     if ($retryCount >= $this->maxRetries) {
                         throw new HttpException (
