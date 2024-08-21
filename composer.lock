@@ -4,36 +4,113 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "799c9e55258db6e9afedfa9bab1b27e3",
+    "content-hash": "6294d38667cdecb40c69dcf243540cff",
     "packages": [
         {
-            "name": "telegram-bot/api",
-            "version": "v2.5.0",
+            "name": "predis/predis",
+            "version": "v3.0.0-alpha1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/TelegramBot/Api.git",
-                "reference": "eaae3526223db49a1bad76a2dfa501dc287979cf"
+                "url": "https://github.com/predis/predis.git",
+                "reference": "cf28b2a9975e9310a3192f0b72d7f1060b280db5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/TelegramBot/Api/zipball/eaae3526223db49a1bad76a2dfa501dc287979cf",
-                "reference": "eaae3526223db49a1bad76a2dfa501dc287979cf",
+                "url": "https://api.github.com/repos/predis/predis/zipball/cf28b2a9975e9310a3192f0b72d7f1060b280db5",
+                "reference": "cf28b2a9975e9310a3192f0b72d7f1060b280db5",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2 || ^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.3",
+                "phpstan/phpstan": "^1.9",
+                "phpunit/phpcov": "^6.0 || ^8.0",
+                "phpunit/phpunit": "^8.0 || ~9.4.4"
+            },
+            "suggest": {
+                "ext-relay": "Faster connection with in-memory caching (>=0.6.2)"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Predis\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Till Krüss",
+                    "homepage": "https://till.im",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "A flexible and feature-complete Redis client for PHP.",
+            "homepage": "http://github.com/predis/predis",
+            "keywords": [
+                "nosql",
+                "predis",
+                "redis"
+            ],
+            "support": {
+                "issues": "https://github.com/predis/predis/issues",
+                "source": "https://github.com/predis/predis/tree/v3.0.0-alpha1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/sponsors/tillkruss",
+                    "type": "github"
+                }
+            ],
+            "time": "2024-01-19T16:57:22+00:00"
+        },
+        {
+            "name": "telegram-bot/api",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/TelegramBot/Api.git",
+                "reference": "532db2b840448ced232c3f27f770fabd4ab32870"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/TelegramBot/Api/zipball/532db2b840448ced232c3f27f770fabd4ab32870",
+                "reference": "532db2b840448ced232c3f27f770fabd4ab32870",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-json": "*",
-                "php": ">=5.5.0"
+                "php": ">=8.1"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.16",
+                "friendsofphp/php-cs-fixer": "~3.28.0",
+                "guzzlehttp/guzzle": "^7.0",
+                "php-http/multipart-stream-builder": "^1.0",
+                "psr/http-client": "^1.0",
+                "psr/http-factory": "^1.0",
+                "symfony/http-client": "^4.3 | ^5.0 | ^6.0",
+                "symfony/mime": "^4.3 | ^5.0 | ^6.0",
                 "symfony/phpunit-bridge": "*",
                 "vimeo/psalm": "^5.9"
             },
+            "suggest": {
+                "guzzlehttp/guzzle": "To use guzzlehttp/guzzle psr implementation",
+                "php-http/multipart-stream-builder": "To use psr/http-client",
+                "psr/http-client": "To use psr/http-client",
+                "psr/http-factory": "To use psr/http-client",
+                "symfony/http-client": "To use symfony/http-client",
+                "symfony/mime": "To use symfony/http-client"
+            },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.5-dev"
+                    "dev-master": "2.6-dev"
                 }
             },
             "autoload": {
@@ -63,9 +140,9 @@
             ],
             "support": {
                 "issues": "https://github.com/TelegramBot/Api/issues",
-                "source": "https://github.com/TelegramBot/Api/tree/v2.5.0"
+                "source": "https://github.com/TelegramBot/Api/tree/master"
             },
-            "time": "2023-08-09T13:53:12+00:00"
+            "time": "2024-08-14T08:13:36+00:00"
         }
     ],
     "packages-dev": [
@@ -75,12 +152,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "94fe5a198cd318e733399ac13ebcf2caeef74477"
+                "reference": "6c4477c9c0f73509f528c9de4de89b1c67b01753"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/94fe5a198cd318e733399ac13ebcf2caeef74477",
-                "reference": "94fe5a198cd318e733399ac13ebcf2caeef74477",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/6c4477c9c0f73509f528c9de4de89b1c67b01753",
+                "reference": "6c4477c9c0f73509f528c9de4de89b1c67b01753",
                 "shasum": ""
             },
             "require": {
@@ -89,7 +166,6 @@
             "conflict": {
                 "phpstan/phpstan-shim": "*"
             },
-            "default-branch": true,
             "bin": [
                 "phpstan",
                 "phpstan.phar"
@@ -124,23 +200,23 @@
                 {
                     "url": "https://github.com/phpstan",
                     "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/phpstan/phpstan",
-                    "type": "tidelift"
                 }
             ],
-            "time": "2023-12-02T14:21:53+00:00"
+            "time": "2024-08-19T20:16:49+00:00"
         }
     ],
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "telegram-bot/api": 20,
         "phpstan/phpstan": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
+    "platform": {
+        "ext-mysqli": "*",
+        "ext-curl": "*"
+    },
     "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }

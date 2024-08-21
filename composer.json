@@ -20,6 +20,7 @@
     "require": {
         "telegram-bot/api": "dev-master",
         "ext-mysqli": "*",
-        "ext-curl": "*"
+        "ext-curl": "*",
+        "predis/predis": "v3.0.0-alpha1"
     }
 }
