@@ -281,8 +281,6 @@ class BotRouter extends Middleware
         } else {
             $this->compiledRouters[$type][$text] = $router['action'];
         }
-
-        $this->saveRoutersToCache();
     }
 
     /**
@@ -296,46 +294,19 @@ class BotRouter extends Middleware
     public function handle(Update $update, Client $bot): void
     {
         $instance = Container::instance();
-
-        if ($update->getMessage() !== null) {
+        if (!empty($update->getMessage())) {
             $this->setChatIdFromUpdate($update);
 
             $botId = $bot->getMe()->getId();
-            $cacheKey = "bot_{$botId}_chat_{$this->chatId}";
 
-            $cachedData = $this->redis->get($cacheKey);
+            if ($this->isBannedBot($botId)) {
+                $bot->sendMessage($this->chatId, 'Бот заблокированы ❌', 'HTML', false, null);
+                return;
+            }
 
-            if ($cachedData) {
-                $cachedData = json_decode($cachedData, true);
-
-                if ($cachedData['is_banned_bot']) {
-                    $bot->sendMessage($this->chatId, 'Бот заблокированы ❌', 'HTML', false, null);
-                    return;
-                }
-
-                if ($cachedData['is_banned_user']) {
-                    $bot->sendMessage($this->chatId, 'Вы заблокированы ❌', 'HTML', false, null);
-                    return;
-                }
-            } else {
-
-                $isBannedBot = $this->isBannedBot($botId);
-                $isBannedUser = $this->isBanned($this->chatId);
-
-                $this->redis->setex($cacheKey, $this->ttl, json_encode([
-                    'is_banned_bot' => $isBannedBot,
-                    'is_banned_user' => $isBannedUser
-                ], JSON_THROW_ON_ERROR));
-
-                if ($isBannedBot) {
-                    $bot->sendMessage($this->chatId, 'Бот заблокированы ❌', 'HTML', false, null);
-                    return;
-                }
-
-                if ($isBannedUser) {
-                    $bot->sendMessage($this->chatId, 'Вы заблокированы ❌', 'HTML', false, null);
-                    return;
-                }
+            if ($this->isBanned($this->chatId)) {
+                $bot->sendMessage($this->chatId, 'Вы заблокированы ❌', 'HTML', false, null);
+                return;
             }
         }
 
