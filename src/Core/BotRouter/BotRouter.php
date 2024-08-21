@@ -260,7 +260,7 @@ class BotRouter extends Middleware
     public function handle(Update $update, Client $bot): void
     {
         $instance = Container::instance();
-        if (empty($update->getMyChatMember())) {
+        if (!empty($update->getMessage())) {
             $this->setChatIdFromUpdate($update);
 
             $botId = $bot->getMe()->getId();
