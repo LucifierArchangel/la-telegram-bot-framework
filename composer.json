@@ -18,9 +18,8 @@
         "phpstan/phpstan": "1.11.x-dev"
     },
     "require": {
-        "telegram-bot/api": "3.1.0.x-dev",
+        "telegram-bot/api": "dev-master",
         "ext-mysqli": "*",
-        "ext-curl": "*",
-        "predis/predis": "^3.0@alpha"
+        "ext-curl": "*"
     }
 }
