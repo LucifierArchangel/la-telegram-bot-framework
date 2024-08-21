@@ -43,9 +43,43 @@ class BotRouter extends Middleware
 
     private int|string $chatId;
 
+    private \Predis\Client $redis;
+
+    private int $ttl = 86400;
+
     public function __construct()
     {
         parent::__construct();
+
+        $this->setRedisClient();
+        $this->loadRoutersFromCache();
+    }
+
+    public function setRedisClient()
+    {
+        $this->redis = new \Predis\Client([
+            'scheme' => $_ENV['REDIS_SCHEME'],
+            'host'   => $_ENV['REDIS_HOST'],
+            'port'   => $_ENV['REDIS_PORT'],
+        ]);
+    }
+
+    private function loadRoutersFromCache(): void
+    {
+        $cacheKey = 'bot_routers';
+
+        $cachedRouters = $this->redis->get($cacheKey);
+
+        if ($cachedRouters) {
+            $this->compiledRouters = json_decode($cachedRouters, true);
+        }
+    }
+
+    private function saveRoutersToCache(): void
+    {
+        $cacheKey = 'bot_routers';
+
+        $this->redis->setex($cacheKey, $this->ttl, json_encode($this->compiledRouters, JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -247,6 +281,8 @@ class BotRouter extends Middleware
         } else {
             $this->compiledRouters[$type][$text] = $router['action'];
         }
+
+        $this->saveRoutersToCache();
     }
 
     /**
@@ -260,19 +296,46 @@ class BotRouter extends Middleware
     public function handle(Update $update, Client $bot): void
     {
         $instance = Container::instance();
-        if (!empty($update->getMessage())) {
+
+        if ($update->getMessage() !== null) {
             $this->setChatIdFromUpdate($update);
 
             $botId = $bot->getMe()->getId();
+            $cacheKey = "bot_{$botId}_chat_{$this->chatId}";
 
-            if ($this->isBannedBot($botId)) {
-                $bot->sendMessage($this->chatId, 'Бот заблокированы ❌', 'HTML', false, null);
-                return;
-            }
+            $cachedData = $this->redis->get($cacheKey);
 
-            if ($this->isBanned($this->chatId)) {
-                $bot->sendMessage($this->chatId, 'Вы заблокированы ❌', 'HTML', false, null);
-                return;
+            if ($cachedData) {
+                $cachedData = json_decode($cachedData, true);
+
+                if ($cachedData['is_banned_bot']) {
+                    $bot->sendMessage($this->chatId, 'Бот заблокированы ❌', 'HTML', false, null);
+                    return;
+                }
+
+                if ($cachedData['is_banned_user']) {
+                    $bot->sendMessage($this->chatId, 'Вы заблокированы ❌', 'HTML', false, null);
+                    return;
+                }
+            } else {
+
+                $isBannedBot = $this->isBannedBot($botId);
+                $isBannedUser = $this->isBanned($this->chatId);
+
+                $this->redis->setex($cacheKey, $this->ttl, json_encode([
+                    'is_banned_bot' => $isBannedBot,
+                    'is_banned_user' => $isBannedUser
+                ], JSON_THROW_ON_ERROR));
+
+                if ($isBannedBot) {
+                    $bot->sendMessage($this->chatId, 'Бот заблокированы ❌', 'HTML', false, null);
+                    return;
+                }
+
+                if ($isBannedUser) {
+                    $bot->sendMessage($this->chatId, 'Вы заблокированы ❌', 'HTML', false, null);
+                    return;
+                }
             }
         }
 
