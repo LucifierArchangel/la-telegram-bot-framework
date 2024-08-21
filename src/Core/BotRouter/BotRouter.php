@@ -281,6 +281,8 @@ class BotRouter extends Middleware
         } else {
             $this->compiledRouters[$type][$text] = $router['action'];
         }
+
+        $this->saveRoutersToCache();
     }
 
     /**
