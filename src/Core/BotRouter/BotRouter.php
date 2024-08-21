@@ -47,15 +47,18 @@ class BotRouter extends Middleware
 
     private int $ttl = 86400;
 
-    public function __construct()
+    private int $botId;
+
+    public function __construct(int $botId)
     {
         parent::__construct();
 
         $this->setRedisClient();
+        $this->setBotId($botId);
         $this->loadRoutersFromCache();
     }
 
-    public function setRedisClient()
+    public function setRedisClient(): void
     {
         $this->redis = new \Predis\Client([
             'scheme' => $_ENV['REDIS_SCHEME'],
@@ -64,20 +67,36 @@ class BotRouter extends Middleware
         ]);
     }
 
+    public function setBotId(int $botId): void
+    {
+        $this->botId = $botId;
+    }
+
+    private function getBotId(): int
+    {
+        return $this->botId;
+    }
+
+    /**
+     * @throws \JsonException
+     */
     private function loadRoutersFromCache(): void
     {
-        $cacheKey = 'bot_routers';
+        $cacheKey = "bot_routers_{$this->botId}";
 
         $cachedRouters = $this->redis->get($cacheKey);
 
         if ($cachedRouters) {
-            $this->compiledRouters = json_decode($cachedRouters, true);
+            $this->compiledRouters = json_decode($cachedRouters, true, 512, JSON_THROW_ON_ERROR);
         }
     }
 
+    /**
+     * @throws \JsonException
+     */
     private function saveRoutersToCache(): void
     {
-        $cacheKey = 'bot_routers';
+        $cacheKey = "bot_routers_{$this->botId}";
 
         $this->redis->setex($cacheKey, $this->ttl, json_encode($this->compiledRouters, JSON_THROW_ON_ERROR));
     }

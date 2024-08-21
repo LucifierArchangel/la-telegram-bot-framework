@@ -44,9 +44,9 @@ class Bot
      */
     private int $maxRetries = 3;
 
-    public function __construct()
+    public function __construct(int $botId)
     {
-        $this->router = new BotRouter();
+        $this->router = new BotRouter($botId);
     }
 
     public function setBotId(?int $botId):void
