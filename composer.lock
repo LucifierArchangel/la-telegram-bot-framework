@@ -4,98 +4,36 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eb03a0e231556d227b70c5703cc97f41",
+    "content-hash": "799c9e55258db6e9afedfa9bab1b27e3",
     "packages": [
         {
-            "name": "predis/predis",
-            "version": "v3.0.0-alpha1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/predis/predis.git",
-                "reference": "cf28b2a9975e9310a3192f0b72d7f1060b280db5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/predis/predis/zipball/cf28b2a9975e9310a3192f0b72d7f1060b280db5",
-                "reference": "cf28b2a9975e9310a3192f0b72d7f1060b280db5",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^7.2 || ^8.0"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.3",
-                "phpstan/phpstan": "^1.9",
-                "phpunit/phpcov": "^6.0 || ^8.0",
-                "phpunit/phpunit": "^8.0 || ~9.4.4"
-            },
-            "suggest": {
-                "ext-relay": "Faster connection with in-memory caching (>=0.6.2)"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Predis\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Till Krüss",
-                    "homepage": "https://till.im",
-                    "role": "Maintainer"
-                }
-            ],
-            "description": "A flexible and feature-complete Redis client for PHP.",
-            "homepage": "http://github.com/predis/predis",
-            "keywords": [
-                "nosql",
-                "predis",
-                "redis"
-            ],
-            "support": {
-                "issues": "https://github.com/predis/predis/issues",
-                "source": "https://github.com/predis/predis/tree/v3.0.0-alpha1"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/sponsors/tillkruss",
-                    "type": "github"
-                }
-            ],
-            "time": "2024-01-19T16:57:22+00:00"
-        },
-        {
             "name": "telegram-bot/api",
-            "version": "3.1.0.x-dev",
+            "version": "v2.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/TelegramBot/Api.git",
-                "reference": "ef970c11fa35f46c842bdbb8a348cb42f00ed72d"
+                "reference": "eaae3526223db49a1bad76a2dfa501dc287979cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/TelegramBot/Api/zipball/ef970c11fa35f46c842bdbb8a348cb42f00ed72d",
-                "reference": "ef970c11fa35f46c842bdbb8a348cb42f00ed72d",
+                "url": "https://api.github.com/repos/TelegramBot/Api/zipball/eaae3526223db49a1bad76a2dfa501dc287979cf",
+                "reference": "eaae3526223db49a1bad76a2dfa501dc287979cf",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-json": "*",
-                "php": ">=7.4"
+                "php": ">=5.5.0"
             },
             "require-dev": {
-                "codeception/codeception": "*",
-                "phpunit/phpunit": "^9.0",
-                "squizlabs/php_codesniffer": "2.*"
+                "friendsofphp/php-cs-fixer": "^3.16",
+                "symfony/phpunit-bridge": "*",
+                "vimeo/psalm": "^5.9"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.0-dev"
+                    "dev-master": "2.5-dev"
                 }
             },
             "autoload": {
@@ -125,9 +63,9 @@
             ],
             "support": {
                 "issues": "https://github.com/TelegramBot/Api/issues",
-                "source": "https://github.com/TelegramBot/Api/tree/3.1.0"
+                "source": "https://github.com/TelegramBot/Api/tree/v2.5.0"
             },
-            "time": "2021-03-09T07:01:18+00:00"
+            "time": "2023-08-09T13:53:12+00:00"
         }
     ],
     "packages-dev": [
@@ -198,15 +136,11 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "telegram-bot/api": 20,
         "phpstan/phpstan": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": {
-        "ext-mysqli": "*",
-        "ext-curl": "*"
-    },
+    "platform": [],
     "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }
