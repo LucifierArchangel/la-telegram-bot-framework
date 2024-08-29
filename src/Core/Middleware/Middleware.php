@@ -77,9 +77,8 @@ class Middleware
         }
 
         $botId = $user['0']['botId'];
-        $ownerId = $user['0']['id'];
 
-        $query = "SELECT * FROM Bot WHERE id = '$botId' AND ownerId = '$ownerId'";
+        $query = "SELECT * FROM Bot WHERE id = '$botId'";
         $bot = $this->DB->getTable($query);
 
         return !empty($bot);
