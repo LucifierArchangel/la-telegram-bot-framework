@@ -52,10 +52,7 @@ class BotRouter extends Middleware
     public function __construct(int $botId)
     {
         parent::__construct();
-
-        $this->setRedisClient();
         $this->setBotId($botId);
-        $this->loadRoutersFromCache();
     }
 
     public function setRedisClient(): void
@@ -300,8 +297,6 @@ class BotRouter extends Middleware
         } else {
             $this->compiledRouters[$type][$text] = $router['action'];
         }
-
-        $this->saveRoutersToCache();
     }
 
     /**
