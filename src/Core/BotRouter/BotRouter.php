@@ -26,6 +26,7 @@ class BotRouter extends Middleware
         'media'              => [],
         'pre_checkout_query' => [],
         'my_chat_member'     => [],
+        'chatJoinRequest'    => [],
         'contact'            => []
     ];
 
@@ -251,6 +252,11 @@ class BotRouter extends Middleware
         $this->addRouter('my_chat_member', '', $action);
     }
 
+    public function chatJoinRequest(array $action): void
+    {
+        $this->addRouter('chatJoinRequest', '', $action);
+    }
+
     /**
      * Registers a group of routes if the specified condition is met.
      *
@@ -344,8 +350,9 @@ class BotRouter extends Middleware
         $callback = $update->getCallbackQuery();
         $preCheckoutQuery = $update->getPreCheckoutQuery();
         $myChatMember = $update->getMyChatMember();
+        $chatJoinRequest = $update->getChatJoinRequest();
 
-        return $this->determineType($message, $callback, $preCheckoutQuery, $myChatMember);
+        return $this->determineType($message, $callback, $preCheckoutQuery, $myChatMember, $chatJoinRequest);
     }
 
     /**
@@ -564,13 +571,16 @@ class BotRouter extends Middleware
         }
     }
 
-    private function determineType($message, $callback, $preCheckoutQuery, $myChatMember): string
+    private function determineType($message, $callback, $preCheckoutQuery, $myChatMember, $chatJoinRequest): string
     {
         if ($preCheckoutQuery) {
             return 'pre_checkout_query';
         }
         if ($myChatMember) {
             return 'my_chat_member';
+        }
+        if ($chatJoinRequest) {
+            return 'chatJoinRequest';
         }
         if ($message) {
             if ($message->getContact()) {
