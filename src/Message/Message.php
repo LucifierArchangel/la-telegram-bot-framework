@@ -7,6 +7,7 @@ namespace Lucifier\Framework\Message;
  */
 abstract class Message
 {
+    protected bool $parse = true;
     /**
      * @var bool message preview
      */
@@ -67,10 +68,12 @@ abstract class Message
      */
     private function compile(array $data): void
     {
-        preg_match_all('~\{{\s*(.+?)\s*\}}~is', $this->template, $matches, PREG_SET_ORDER);
+        if ($this->parse === true) {
+            preg_match_all('~\{{\s*(.+?)\s*\}}~is', $this->template, $matches, PREG_SET_ORDER);
 
-        foreach ($matches as $match) {
-            $this->template = str_replace($match[0], $data[$match[1]], $this->template);
+            foreach ($matches as $match) {
+                $this->template = str_replace($match[0], $data[$match[1]], $this->template);
+            }
         }
     }
 
