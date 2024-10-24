@@ -10,7 +10,7 @@ class Middleware
     protected DB $DB;
     protected array $config;
 
-    private const ENV_PATH = __DIR__ . '/../../../../../../';
+    private const ENV_PATH = __DIR__ . '/../../../../../../.env';
     private const CONFIG_PATH = __DIR__ . '/../../../config/middlewareConfig.php';
 
     public function __construct()
@@ -21,8 +21,11 @@ class Middleware
 
     private function initDb(): void
     {
-        $dotenv = \Dotenv\Dotenv::createImmutable(self::ENV_PATH);
-        $dotenv->load();
+        if (file_exists(self::ENV_PATH)) {
+            $dotenv = Dotenv::createImmutable(paths: self::ENV_PATH);
+            $dotenv->load();
+        }
+
         $this->DB = DB::getInstance();
         $this->DB->openNew('db', $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], $_ENV['DB_DATABASE']);
     }
