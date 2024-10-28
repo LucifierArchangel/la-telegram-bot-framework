@@ -27,7 +27,7 @@ class Middleware
         }
 
         $this->DB = DB::getInstance();
-        $this->DB->openNew($_ENV['DB_SERVER'], $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], $_ENV['DB_DATABASE']);
+        $this->DB->openNew($_ENV['DB_SERVER'], $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], $_ENV['DB_DATABASE'], $_ENV['DB_PORT']);
     }
 
     private function loadConfig(): void
