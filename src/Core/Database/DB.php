@@ -43,10 +43,22 @@
          * @param string $user       database's user
          * @param string $password   database's password
          * @param string $name       database's name
+         * @param ?string $port      database's port
          * @return void
          */
-        public function openNew(string $server, string $user, string $password, string $name): void {
-            $this->connection = mysqli_connect($server, $user, $password, $name);
+        public function openNew(
+            string $server,
+            string $user,
+            string $password,
+            string $name,
+            ?string $port = null
+        ): void {
+            if ($port === null) {
+                $this->connection = mysqli_connect($server, $user, $password, $name);
+            } else {
+                $this->connection = mysqli_connect($server, $user, $password, $name, $port);
+            }
+
             $this->dbName = $name;
 
             mysqli_query($this->connection,"SET NAMES utf8mb4");

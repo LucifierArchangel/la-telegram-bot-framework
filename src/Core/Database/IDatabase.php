@@ -7,7 +7,7 @@
     interface IDatabase {
         public static function getInstance(): IDatabase;
 
-        public function openNew(string $server, string $user, string $password, string $name): void;
+        public function openNew(string $server, string $user, string $password, string $name, ?string $port = null): void;
 
         public function getConnection(): mixed;
 
