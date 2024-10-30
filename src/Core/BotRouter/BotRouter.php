@@ -316,17 +316,26 @@ class BotRouter extends Middleware
     public function handle(Update $update, Client $bot): void
     {
         $instance = Container::instance();
-        if (!empty($update->getMessage())) {
+        
+        if (
+            !empty($update->getMessage())
+            || !empty($update->getCallbackQuery())
+        ) {
             $this->setChatIdFromUpdate($update);
+            $botId = $bot->getMe()?->getId();
 
-            $botId = $bot->getMe()->getId();
-
-            if ($this->isBannedBot($botId)) {
+            if (
+                $botId !== null
+                && $this->isBannedBot($botId)
+            ) {
                 $bot->sendMessage($this->chatId, 'Бот заблокирован ❌', 'HTML', false, null);
                 return;
             }
 
-            if ($this->isBanned($this->chatId)) {
+            if (
+                $this->chatId !== null
+                && $this->isBanned($this->chatId)
+            ) {
                 $bot->sendMessage($this->chatId, 'Вы заблокированы ❌', 'HTML', false, null);
                 return;
             }
