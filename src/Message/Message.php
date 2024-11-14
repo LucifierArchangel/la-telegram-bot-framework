@@ -72,6 +72,9 @@ abstract class Message
             preg_match_all('~\{{\s*(.+?)\s*\}}~is', $this->template, $matches, PREG_SET_ORDER);
 
             foreach ($matches as $match) {
+                if ($data[$match[1]] === null) {
+                    continue;
+                }
                 $this->template = str_replace($match[0], $data[$match[1]], $this->template);
             }
         }
