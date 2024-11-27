@@ -220,15 +220,16 @@ class DB implements IDatabase
      *
      * This method ensures that the given value is properly escaped and formatted for use in an SQL query,
      * preventing SQL injection vulnerabilities. It supports multiple data types, including strings, numbers,
-     * arrays, `DateTime` objects, and `NULL`. If an unsupported data type is provided, an exception is thrown.
+     * arrays, `DateTime` objects, booleans, and `NULL`. If an unsupported data type is provided, an exception is thrown.
      *
      * - Strings are escaped using `mysqli_real_escape_string`.
      * - Arrays are recursively escaped, and their values are joined with commas.
      * - `DateTime` objects are formatted as strings in the `'Y-m-d H:i:s'` format.
      * - Numeric values are converted to strings and use a dot as the decimal separator.
+     * - Booleans are converted to `1` or `0`.
      * - `NULL` is returned as the string `'NULL'`.
      *
-     * @param mixed $value          The value to be escaped. Can be a string, number, array, `DateTime` object, or `NULL`.
+     * @param mixed $value          The value to be escaped. Can be a string, number, array, `DateTime` object, `bool`, or `NULL`.
      *
      * @return string               The escaped value, ready for inclusion in an SQL query.
      *
@@ -237,6 +238,9 @@ class DB implements IDatabase
     public function escape(mixed $value): string
     {
         if (is_array($value)) {
+            if (empty($value)) {
+                return "''";
+            }
             $escapedArray = array_map([$this, 'escape'], $value);
             return implode(',', $escapedArray);
         }
@@ -246,6 +250,12 @@ class DB implements IDatabase
         }
 
         if (is_string($value)) {
+            if (
+                !isset($this->connection)
+                || !$this->connection
+            ) {
+                throw new \RuntimeException('Database connection is not set or invalid.');
+            }
             return "'" . mysqli_real_escape_string($this->connection, $value) . "'";
         }
 
@@ -253,11 +263,15 @@ class DB implements IDatabase
             return str_replace(',', '.', (string)$value);
         }
 
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+
         if (is_null($value)) {
             return 'NULL';
         }
 
-        throw new \InvalidArgumentException('Unsupported data type for SQL escaping.');
+        throw new \InvalidArgumentException('Unsupported data type for SQL escaping: ' . gettype($value));
     }
 
     /**
