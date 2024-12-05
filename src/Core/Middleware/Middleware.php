@@ -35,7 +35,7 @@ class Middleware
         $this->config = require self::CONFIG_PATH;
     }
 
-    private function checkCondition(string $type, int|string $chatId): bool|array
+    private function checkCondition(string $type, int|string $chatId, array $extraConditions = []): bool|array
     {
         if (!isset($this->config[$type])) {
             throw new \Exception('Unknown middleware type:' . $type);
@@ -46,7 +46,7 @@ class Middleware
         $conditions = $config['conditions'];
 
         $queryConditions = [];
-        foreach ($conditions as $field => $value) {
+        foreach (array_merge($conditions, $extraConditions) as $field => $value) {
             $value = ($value === ':chatId') ? $chatId : $value;
             $queryConditions[] = "$field = '$value'";
         }
@@ -57,9 +57,21 @@ class Middleware
         return $this->DB->getTable($query);
     }
 
-    public function isBanned(int|string $chatId): bool
+    public function isBanned(int|string $chatId, int|string $botChatId): bool
     {
-        $result = $this->checkCondition('isBanned', $chatId);
+        $query = "SELECT id FROM Bot WHERE chatId = :botChatId";
+        $queryData = [
+            'botChatId' => $botChatId,
+        ];
+        $bot = $this->DB->getRow($query, $queryData);
+
+        if (empty($bot)) {
+            return false;
+        }
+
+        $botId = $bot['id'];
+
+        $result = $this->checkCondition('isBanned', $chatId, ['botId' => $botId]);
 
         return !empty($result);
     }
