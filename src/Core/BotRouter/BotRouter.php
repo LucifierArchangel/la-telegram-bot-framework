@@ -334,7 +334,7 @@ class BotRouter extends Middleware
 
             if (
                 $this->chatId !== null
-                && $this->isBanned($this->chatId)
+                && $this->isBanned($this->chatId, $botId)
             ) {
                 $bot->sendMessage($this->chatId, 'Вы заблокированы ❌', 'HTML', false, null);
                 return;
