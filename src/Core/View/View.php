@@ -150,7 +150,23 @@ class View
                             $protectContent = null,
                             $allowSendingWithoutReply = null,
                             null);
-                    } elseif (empty($media)) {
+                    }
+                    if (isset($media['document'])) {
+                        $this->bot->sendDocument(
+                            $chatId,
+                            $media['document'],
+                            $text,
+                            null,
+                            $answerKeyboard,
+                            false,
+                            "HTML",
+                            $messageThreadId = null,
+                            $protectContent = null,
+                            $allowSendingWithoutReply = null,
+                            null
+                        );
+                    }
+                    if (empty($media)) {
                         $this->bot->sendMessage(
                             $chatId,
                             $text,
