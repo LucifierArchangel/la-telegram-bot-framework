@@ -315,28 +315,19 @@ class BotRouter extends Middleware
      */
     public function handle(Update $update, Client $bot): void
     {
-        error_log("handle method called");
-
         $instance = Container::instance();
-        error_log("Container instance created");
 
         if (
             !empty($update->getMessage())
             || !empty($update->getCallbackQuery())
         ) {
-            error_log("Update has message or callback query");
-
             $this->setChatIdFromUpdate($update);
-            error_log("Chat ID set from update: {$this->chatId}");
-
             $botId = $bot->getMe()?->getId();
-            error_log("Bot ID retrieved: " . ($botId ?? "null"));
 
             if (
                 $botId !== null
                 && $this->isBannedBot($botId)
             ) {
-                error_log("Bot with ID $botId is banned");
                 $bot->sendMessage($this->chatId, 'Бот заблокирован ❌', 'HTML', false, null);
                 return;
             }
@@ -345,22 +336,16 @@ class BotRouter extends Middleware
                 $this->chatId !== null
                 && $this->isBanned($this->chatId, $botId)
             ) {
-                error_log("Chat ID {$this->chatId} is banned for bot ID $botId");
                 $bot->sendMessage($this->chatId, 'Вы заблокированы ❌', 'HTML', false, null);
                 return;
             }
         }
 
         $type = $this->determineUpdateType($update);
-        error_log("Update type determined: $type");
-
         $data = $this->extractDataFromUpdate($update, $type);
-        error_log("Data extracted from update: " . json_encode($data));
 
         $this->processUpdate($instance, $bot, $update, $type, $data);
-        error_log("Update processed successfully");
     }
-
 
     /**
      * Determine update type
