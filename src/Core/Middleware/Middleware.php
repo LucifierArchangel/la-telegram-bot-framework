@@ -86,7 +86,7 @@ class Middleware
 
         return $isBanned;
     }
-    
+
     public function isBannedBot(int|string $chatId): bool
     {
         $result = $this->checkCondition('isBannedBot', $chatId);
