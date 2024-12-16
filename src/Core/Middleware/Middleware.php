@@ -59,23 +59,34 @@ class Middleware
 
     public function isBanned(int|string $chatId, int|string $botChatId): bool
     {
+        error_log("isBanned called with chatId: $chatId, botChatId: $botChatId");
+
         $query = "SELECT id FROM Bot WHERE chatId = :botChatId";
         $queryData = [
             'botChatId' => $botChatId,
         ];
+        error_log("SQL Query: $query, Data: " . json_encode($queryData));
+
         $bot = $this->DB->getRow($query, $queryData);
+        error_log("Query Result: " . json_encode($bot));
 
         if (empty($bot)) {
+            error_log("Bot not found for botChatId: $botChatId");
             return false;
         }
 
         $botId = $bot['id'];
+        error_log("Bot ID: $botId");
 
         $result = $this->checkCondition('isBanned', $chatId, ['botId' => $botId]);
+        error_log("checkCondition result: " . json_encode($result));
 
-        return !empty($result);
+        $isBanned = !empty($result);
+        error_log("isBanned result: " . ($isBanned ? 'true' : 'false'));
+
+        return $isBanned;
     }
-
+    
     public function isBannedBot(int|string $chatId): bool
     {
         $result = $this->checkCondition('isBannedBot', $chatId);
