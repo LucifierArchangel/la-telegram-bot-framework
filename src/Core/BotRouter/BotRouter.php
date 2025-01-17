@@ -664,7 +664,7 @@ class BotRouter extends Middleware
 
         if (isset($entities)) {
             foreach ($entities as $entity) {
-                if ($entity->getType() === 'bot_command') {
+                if (($entity->getType() === 'bot_command') && $entity->getOffset() === 0) {
                     return true;
                 }
             }
