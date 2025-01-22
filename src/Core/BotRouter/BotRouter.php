@@ -321,7 +321,9 @@ class BotRouter extends Middleware
             !empty($update->getMessage())
             || !empty($update->getCallbackQuery())
         ) {
+
             $this->setChatIdFromUpdate($update);
+
             $botId = $bot->getMe()?->getId();
 
             if (
@@ -342,10 +344,12 @@ class BotRouter extends Middleware
         }
 
         $type = $this->determineUpdateType($update);
+
         $data = $this->extractDataFromUpdate($update, $type);
 
         $this->processUpdate($instance, $bot, $update, $type, $data);
     }
+
 
     /**
      * Determine update type
@@ -423,15 +427,33 @@ class BotRouter extends Middleware
      */
     private function processTextUpdate(mixed $instance, Client $bot, Update $update, mixed $data): void
     {
+        $defaultRoute = null;
+        $matched = false;
+
         foreach ($this->compiledRouters['text'] as $router) {
-            if (preg_match($router['pattern'], $data)) {
+            if ($router['pattern'] === '/.+/') {
+                $defaultRoute = $router;
+                continue;
+            }
+
+            $expectedText = trim($router['pattern'], '\/');
+
+            if ($expectedText === $data) {
+                $matched = true;
                 if ($this->executeMiddleware($router['middleware'], $bot, $update)) {
                     $this->executeRoute($instance, $router, $bot, $update);
                 }
                 break;
             }
         }
+
+        if (!$matched && $defaultRoute) {
+            if ($this->executeMiddleware($defaultRoute['middleware'], $bot, $update)) {
+                $this->executeRoute($instance, $defaultRoute, $bot, $update);
+            }
+        }
     }
+
 
     /**
      * Execute middleware
@@ -605,14 +627,19 @@ class BotRouter extends Middleware
 
     private function extractData($message, $callback, $type): string
     {
-        if ($type === 'text' || $type === 'command') {
+        if ($type === 'command') {
             $data = $message->getText();
             if ($data) {
-                $command = str_replace('/', '', $data);
+                $command = trim($data, '\/');
                 return $command;
             }
-            return '';
         }
+
+        if ($type === 'text') {
+            $data = $message->getText();
+            return $data;
+        }
+
         if ($type === 'callback') {
             return $this->getCallbackWithoutParameters($callback->getData());
         }
@@ -664,8 +691,10 @@ class BotRouter extends Middleware
 
         if (isset($entities)) {
             foreach ($entities as $entity) {
-                if (($entity->getType() === 'bot_command') && $entity->getOffset() === 0) {
-                    return true;
+                if ($entity->getType() === 'bot_command') {
+                    if ($entity->getOffset() === 0) {
+                        return true;
+                    }
                 }
             }
         }
