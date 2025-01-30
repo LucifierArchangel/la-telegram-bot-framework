@@ -83,7 +83,7 @@ class View
         if (isset($chatId)) {
             $this->configure();
 
-            $text = $this->message->run($message) ?? null;
+            $text = $this->fixUnclosedHtmlTags($this->message->run($message)) ?? null;
             $answerKeyboard = null;
 
             if (isset($this->keyboard)) {
@@ -181,5 +181,23 @@ class View
             }
         }
         return true;
+    }
+
+    private function fixUnclosedHtmlTags(string $text): string
+    {
+        $allowedTags = ['b', 'i', 'u', 'a', 'code', 'pre'];
+        foreach ($allowedTags as $tag) {
+            preg_match_all("/<$tag\b[^>]*>/i", $text, $openTags);
+            preg_match_all("/<\/$tag>/i", $text, $closeTags);
+
+            $openCount  = count($openTags[0]);
+            $closeCount = count($closeTags[0]);
+
+            if ($openCount > $closeCount) {
+                $text = preg_replace("/<$tag\b[^>]*>/i", '', $text, $openCount - $closeCount);
+            }
+        }
+
+        return $text;
     }
 }
