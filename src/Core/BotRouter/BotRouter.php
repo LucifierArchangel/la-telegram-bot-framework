@@ -641,8 +641,17 @@ class BotRouter extends Middleware
         }
 
         if ($type === 'callback') {
-            return $this->getCallbackWithoutParameters($callback->getData());
+            if ($callback !== null) {
+                $callbackData = $callback->getData();
+
+                if ($callbackData === null) {
+                    return '';
+                }
+                return $this->getCallbackWithoutParameters($callbackData);
+            }
+            return '';
         }
+
         if ($type === 'contact') {
             return $message->getContact()->getPhoneNumber();
         }
