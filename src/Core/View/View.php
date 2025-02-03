@@ -180,7 +180,8 @@ class View
                             $answerKeyboard);
                     }
                 } catch (\Exception $e) {
-                    return throw new \Exception($e->getMessage());
+                    error_log("[ERROR] error when sending message chatId: $chatId. Error: "
+                        . $exception->getMessage());
                 }
             }
         }
