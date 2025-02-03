@@ -97,9 +97,13 @@ class View
             }
 
             if ($this->message->getType() === 'send') {
-
-                if ($msgId && $callback) {
-                    $this->bot->deleteMessage($chatId, $msgId);
+                if (is_int($msgId) && !empty($chatId) && $callback) {
+                    try {
+                        $this->bot->deleteMessage($chatId, $msgId);
+                    } catch (\Exception $exception) {
+                        error_log("[ERROR] error when deleting message ID: $msgId in chat: $chatId. Error: "
+                            . $exception->getMessage());
+                    }
                 }
 
                 if ($callback) {
