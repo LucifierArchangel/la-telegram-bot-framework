@@ -34,6 +34,8 @@ class View
      */
     protected Update $update;
 
+    protected bool $isDeleted = true;
+
     public function __construct($update, $bot)
     {
         $this->update = $update;
@@ -97,7 +99,12 @@ class View
             }
 
             if ($this->message->getType() === 'send') {
-                if (is_int($msgId) && !empty($chatId) && $callback) {
+                if (
+                    is_int($msgId)
+                    && !empty($chatId)
+                    && $callback
+                    && $this->isDeleted === true
+                ) {
                     try {
                         $this->bot->deleteMessage($chatId, $msgId);
                     } catch (\Exception $exception) {
