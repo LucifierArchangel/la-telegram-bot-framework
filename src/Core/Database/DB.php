@@ -250,13 +250,14 @@ class DB implements IDatabase
         }
 
         if (is_string($value)) {
-            if (
-                !isset($this->connection)
-                || !$this->connection
-            ) {
+            if (!isset($this->connection) || !$this->connection) {
                 throw new \RuntimeException('Database connection is not set or invalid.');
             }
-            return "'" . mysqli_real_escape_string($this->connection, $value) . "'";
+            $escaped = mysqli_real_escape_string($this->connection, $value);
+
+            return (str_starts_with($escaped, "'") && str_ends_with($escaped, "'"))
+                ? $escaped
+                : "'{$escaped}'";
         }
 
         if (is_numeric($value)) {
@@ -273,6 +274,7 @@ class DB implements IDatabase
 
         throw new \InvalidArgumentException('Unsupported data type for SQL escaping: ' . gettype($value));
     }
+
 
     /**
      * Get one cell
