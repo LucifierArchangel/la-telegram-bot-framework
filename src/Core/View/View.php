@@ -110,6 +110,7 @@ class View
                     } catch (\Exception $exception) {
                         error_log("[ERROR] error when deleting message ID: $msgId in chat: $chatId. Error: "
                             . $exception->getMessage());
+                        $this->isDeleted = false;
                     }
                 }
 
@@ -188,7 +189,7 @@ class View
                     }
                 } catch (\Exception $e) {
                     error_log("[ERROR] error when sending message chatId: $chatId. Error: "
-                        . $exception->getMessage());
+                        . $e->getMessage());
                 }
             }
         }
