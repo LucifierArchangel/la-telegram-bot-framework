@@ -637,7 +637,7 @@ class BotRouter extends Middleware
 
         if ($type === 'text') {
             $data = $message->getText();
-            return $data;
+            return $data ?? '';
         }
 
         if ($type === 'callback') {
