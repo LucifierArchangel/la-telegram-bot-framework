@@ -56,6 +56,16 @@ class BotRouter extends Middleware
         $this->setBotId($botId);
     }
 
+    public function getCompiledRouters(): array
+    {
+        return $this->compiledRouters;
+    }
+
+    public function setCompiledRouters(array $compiledRouters): void
+    {
+        $this->compiledRouters = $compiledRouters;
+    }
+
     public function setRedisClient(): void
     {
         $this->redis = new \Predis\Client([
