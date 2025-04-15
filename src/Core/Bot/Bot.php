@@ -4,8 +4,9 @@ namespace Lucifier\Framework\Core\Bot;
 
 use Lucifier\Framework\Core\BotRouter\BotRouter;
 use TelegramBot\Api\Client;
-use TelegramBot\Api\InvalidJsonException;
+use TelegramBot\Api\HttpException;
 use TelegramBot\Api\Types\Update;
+use Exception;
 
 class Bot
 {
@@ -44,31 +45,23 @@ class Bot
      */
     private int $maxRetries = 3;
 
+
     public function __construct(int $botId)
     {
         $this->router = new BotRouter($botId);
     }
 
-    public function setBotId(?int $botId):void
+    public function setBotId(?int $botId): void
     {
         $this->botId = $botId;
     }
 
-    /**
-     * Static method to initialize the Update object
-     *
-     * @return void
-     */
-    public static function initializeUpdate(): void
+    public static function initializeUpdate(): ?Update
     {
         self::$update = Update::fromResponse(json_decode(file_get_contents('php://input'), true));
+        return self::$update;
     }
 
-    /**
-     * Bot initialization
-     *
-     * @return void
-     */
     public function initClient(): void
     {
         $this->client = new Client($this->token);
@@ -82,39 +75,54 @@ class Bot
         });
     }
 
-    /**
-     * Set bot token
-     *
-     * @param string $token bot's token
-     * @return void
-     */
     public function setToken(string $token): void
     {
         $this->token = $token;
     }
 
-    /**
-     * Get current bot's prefix
-     *
-     * @return string
-     */
     public function getPrefix(): string
     {
         return $this->prefix;
     }
 
-    /**
-     * @throws InvalidJsonException
-     */
-    public function run(): void
+    public function getClient(): Client
+    {
+        return $this->client;
+    }
+
+    public function processUpdate(?Update $update = null): bool
+    {
+        if (!$update && !self::$update) {
+            return false;
+        }
+
+        $updateObj = $update ?? self::$update;
+
+        try {
+            $this->router->handle($updateObj, $this->client);
+            return true;
+        } catch (Exception $e) {
+            error_log('Failed to process update: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function sendQuickResponse(): void
+    {
+        if (!headers_sent()) {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => true]);
+            flush();
+        }
+    }
+
+    private function processUpdateWithRetries(): void
     {
         $retryCount = 0;
 
         while ($retryCount < $this->maxRetries) {
             try {
-                $this->client->run();
-                $retryCount = 0;
-
+                $this->processUpdate();
                 break;
             } catch (HttpException $httpException) {
                 if (
@@ -123,15 +131,30 @@ class Bot
                 ) {
                     $retryCount++;
                     if ($retryCount >= $this->maxRetries) {
-                        throw new HttpException (
-                            "Failed to resolve host after {$this->maxRetries} attempts: "
-                            . $httpException->getMessage());
+                        error_log("Failed to resolve host after {$this->maxRetries} attempts: " . $httpException->getMessage());
+                        break;
                     }
                     sleep(1);
                 } else {
-                    throw $httpException;
+                    error_log("HTTP Exception: " . $httpException->getMessage());
+                    break;
                 }
+            } catch (Exception $e) {
+                error_log("Exception in processUpdate: " . $e->getMessage());
+                break;
             }
+        }
+    }
+
+    public function run(): void
+    {
+        $this->sendQuickResponse();
+
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+            $this->processUpdateWithRetries();
+        } else {
+            $this->processUpdateWithRetries();
         }
     }
 }
