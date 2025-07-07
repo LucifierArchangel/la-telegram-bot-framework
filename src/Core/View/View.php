@@ -86,13 +86,6 @@ class View
         $keyboardData = $this->keyboard->build($keyboardParams);
         $keyboardType = $this->keyboard->getType();
 
-        if (
-            $isCallback
-            && $keyboardType !== 'inline'
-        ) {
-            return null;
-        }
-
         if ($keyboardType === 'inline') {
             return new InlineKeyboardMarkup($keyboardData);
         }
@@ -375,7 +368,8 @@ class View
     public function show(
         $message = [],
         $keyboard = [],
-        $media = []
+        $media = [],
+        $tryToEdit = true
     ): bool {
         $context = $this->getMessageContext();
 
@@ -394,13 +388,15 @@ class View
         }
 
         if ($this->message->getType() === 'send') {
-            if ($this->canEditMessage($context, $keyboardMarkup)) {
+            $isInline = $keyboardMarkup instanceof InlineKeyboardMarkup;
+
+            if ($tryToEdit && $isInline && $this->canEditMessage($context, $keyboardMarkup)) {
                 if ($this->tryEditMessage($context, $text, $keyboardMarkup, $media)) {
                     return true;
                 }
             }
 
-            if ($context['callback'] && $this->shouldDeleteMessage($context)) {
+            if ($tryToEdit && $context['callback'] && $this->shouldDeleteMessage($context)) {
                 $this->tryDeleteMessage($context);
             }
 
