@@ -96,7 +96,7 @@ class View
     protected function handleCallback(array $context): bool
     {
         if (!$context['callback']) {
-            return false;
+            return true;
         }
 
         try {
@@ -377,15 +377,15 @@ class View
             return false;
         }
 
+        if ($context['callback'] && !$this->handleCallback($context)) {
+            return false;
+        }
+
         $this->configure();
 
         $text = $this->prepareMessageText($message);
 
         $keyboardMarkup = $this->buildKeyboard($keyboard, $context['callback']);
-
-        if ($context['callback']) {
-            $this->handleCallback($context);
-        }
 
         if ($this->message->getType() === 'send') {
             $isInline = $keyboardMarkup instanceof InlineKeyboardMarkup;
