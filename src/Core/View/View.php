@@ -16,10 +16,15 @@ use TelegramBot\Api\Types\Update;
 class View
 {
     protected Message $message;
+
     protected Keyboard $keyboard;
+
     protected Client $bot;
+
     protected Update $update;
+
     protected bool $isDeleted = true;
+
     protected array $botCache = [];
 
     private const MAX_MESSAGE_AGE = 172800;
@@ -63,7 +68,8 @@ class View
 
     protected function prepareMessageText(array $messageParams): ?string
     {
-        return $this->message->run($messageParams);
+        $text = $this->message->run($messageParams);
+        return $text;
     }
 
     protected function buildKeyboard(array $keyboardParams, bool $isCallback)
@@ -75,6 +81,13 @@ class View
         $keyboardData = $this->keyboard->build($keyboardParams);
         $keyboardType = $this->keyboard->getType();
 
+        if (
+            $isCallback
+            && $keyboardType !== 'inline'
+        ) {
+            return null;
+        }
+
         if ($keyboardType === 'inline') {
             return new InlineKeyboardMarkup($keyboardData);
         }
@@ -85,40 +98,75 @@ class View
     protected function handleCallback(array $context): bool
     {
         if (!$context['callback']) {
-            return true;
+            return false;
         }
 
         try {
             $this->bot->answerCallbackQuery($context['currentMessage']->getId());
+            return true;
         } catch (\Exception $exception) {
-            error_log("[WARNING] Failed to answer callback query: " . $exception->getMessage());
+            error_log("[ERROR] error when answering callback query: " . $exception->getMessage());
         }
 
-        return true;
+        return false;
     }
 
     protected function createMediaObject(array $media, ?string $text)
     {
-        $mediaTypes = [
-            'photo'    => InputMediaPhoto::class,
-            'video'    => InputMediaVideo::class,
-            'document' => InputMediaDocument::class,
-            'gif'      => InputMediaAnimation::class
-        ];
+        if (isset($media['photo'])) {
+            $inputMedia = new InputMediaPhoto();
 
-        foreach ($mediaTypes as $type => $className) {
-            if (isset($media[$type])) {
-                $inputMedia = new $className();
-                $inputMedia->setType($type === 'gif' ? 'animation' : $type);
-                $inputMedia->setMedia($media[$type]);
+            $inputMedia->setType('photo');
+            $inputMedia->setMedia($media['photo']);
 
-                if ($text !== null) {
-                    $inputMedia->setCaption($text);
-                    $inputMedia->setParseMode('HTML');
-                }
-
-                return $inputMedia;
+            if ($text !== null) {
+                $inputMedia->setCaption($text);
+                $inputMedia->setParseMode('HTML');
             }
+
+            return $inputMedia;
+
+        }
+
+        if (isset($media['video'])) {
+            $inputMedia = new InputMediaVideo();
+
+            $inputMedia->setType('video');
+            $inputMedia->setMedia($media['video']);
+
+            if ($text !== null) {
+                $inputMedia->setCaption($text);
+                $inputMedia->setParseMode('HTML');
+            }
+            return $inputMedia;
+
+        }
+
+        if (isset($media['document'])) {
+            $inputMedia = new InputMediaDocument();
+
+            $inputMedia->setType('document');
+            $inputMedia->setMedia($media['document']);
+
+            if ($text !== null) {
+                $inputMedia->setCaption($text);
+                $inputMedia->setParseMode('HTML');
+            }
+            return $inputMedia;
+
+        }
+
+        if (isset($media['gif'])) {
+            $inputMedia = new InputMediaAnimation();
+
+            $inputMedia->setType('animation');
+            $inputMedia->setMedia($media['gif']);
+
+            if ($text !== null) {
+                $inputMedia->setCaption($text);
+                $inputMedia->setParseMode('HTML');
+            }
+            return $inputMedia;
         }
 
         return null;
@@ -130,56 +178,49 @@ class View
         $msgId = $context['msgId'];
 
         if (!is_int($msgId) || empty($chatId)) {
-            error_log("[ERROR] Invalid message or chat ID for editing");
+            error_log("[ERROR] Invalid message or chat ID for editing. msgId: " . var_export($msgId, true) . ", chatId: " . var_export($chatId, true));
             return false;
         }
 
         try {
-            $originalMessage = $context['currentMessage']->getMessage();
-            $hasOriginalMedia = $originalMessage && (
-                    $originalMessage->getPhoto() ||
-                    $originalMessage->getVideo() ||
-                    $originalMessage->getDocument() ||
-                    $originalMessage->getAnimation()
-                );
+            if (!empty($media)) {
 
-            if (!empty($media) || $hasOriginalMedia) {
                 $inputMedia = $this->createMediaObject($media, $text);
                 if ($inputMedia) {
-                    $this->bot->editMessageMedia($chatId, $msgId, $inputMedia, null, $keyboard);
+
+                    $this->bot->editMessageMedia(
+                        $chatId,
+                        $msgId,
+                        $inputMedia,
+                        null,
+                        $keyboard
+                    );
                     return true;
                 }
 
-                if ($text !== null && !$hasOriginalMedia) {
-                    $this->bot->editMessageText($chatId, $msgId, $text, 'HTML',
-                        $this->message->getPreview(), $keyboard);
-                    return true;
-                } elseif ($hasOriginalMedia) {
-                    $this->bot->editMessageReplyMarkup($chatId, $msgId, $keyboard);
-                    return true;
-                }
-
-                return false;
-            }
-
-            if ($text !== null) {
-                $this->bot->editMessageText($chatId, $msgId, $text, 'HTML',
-                    $this->message->getPreview(), $keyboard);
+                error_log("[ERROR] Failed to create media object");
+            } elseif ($text !== null) {
+                $this->bot->editMessageText(
+                    $chatId,
+                    $msgId,
+                    $text,
+                    'HTML',
+                    $this->message->getPreview(),
+                    $keyboard
+                );
+                return true;
+            } else {
+                $this->bot->editMessageReplyMarkup(
+                    $chatId,
+                    $msgId,
+                    $keyboard
+                );
                 return true;
             }
-
-            $this->bot->editMessageReplyMarkup($chatId, $msgId, $keyboard);
-            return true;
-
         } catch (\Exception $exception) {
-            error_log("[ERROR] Failed to edit message: " . $exception->getMessage());
-
-            try {
-                $this->bot->editMessageReplyMarkup($chatId, $msgId, $keyboard);
-                return true;
-            } catch (\Exception $e) {
-                error_log("[ERROR] Failed to edit markup: " . $e->getMessage());
-            }
+            error_log("[ERROR] error when editing message ID: $msgId in chat: $chatId. Error: "
+                . $exception->getMessage());
+            error_log("[DEBUG] Exception trace: " . $exception->getTraceAsString());
         }
 
         return false;
@@ -226,20 +267,21 @@ class View
             $messageAge = time() - $messageTime;
 
             if ($messageAge < self::MAX_MESSAGE_AGE &&
-                in_array($chatMember->getStatus(), ['administrator', 'creator'])
+                ($chatMember->getStatus() === 'administrator' || $chatMember->getStatus() === 'creator')
             ) {
                 $this->bot->deleteMessage($chatId, $msgId);
                 return true;
             } else {
                 $this->isDeleted = false;
                 if ($messageAge >= self::MAX_MESSAGE_AGE) {
-                    error_log("[INFO] Message too old to delete (age: {$messageAge}s)");
+                    error_log("[INFO] Message ID: $msgId is too old to delete (age: $messageAge seconds)");
                 } else {
-                    error_log("[INFO] No permission to delete in chat {$chatId}");
+                    error_log("[INFO] Bot doesn't have permission to delete messages in chat $chatId");
                 }
             }
         } catch (\Exception $exception) {
-            error_log("[ERROR] Failed to delete message: " . $exception->getMessage());
+            error_log("[ERROR] error when deleting message ID: $msgId in chat: $chatId. Error: "
+                . $exception->getMessage());
             $this->isDeleted = false;
         }
 
@@ -256,20 +298,61 @@ class View
 
         try {
             if (isset($media['photo'])) {
-                $this->bot->sendPhoto($chatId, $media['photo'], $text, null, $keyboard, false, "HTML");
-            } elseif (isset($media['video'])) {
-                $this->bot->sendVideo($chatId, $media['video'], null, $text, null, $keyboard, false, false, "HTML");
-            } elseif (isset($media['gif'])) {
-                $this->bot->sendAnimation($chatId, $media['gif'], null, $text, null, $keyboard, false, "HTML");
-            } elseif (isset($media['document'])) {
-                $this->bot->sendDocument($chatId, $media['document'], $text, null, $keyboard, false, "HTML");
-            } elseif (empty($media) && $text !== null) {
-                $this->bot->sendMessage($chatId, $text, "HTML", $this->message->getPreview(), null, $keyboard);
+                $this->bot->sendPhoto(
+                    $chatId,
+                    $media['photo'],
+                    $text,
+                    null,
+                    $keyboard,
+                    false,
+                    "HTML"
+                );
+            } else if (isset($media['video'])) {
+                $this->bot->sendVideo(
+                    $chatId,
+                    $media['video'],
+                    null,
+                    $text,
+                    null,
+                    $keyboard,
+                    false,
+                    false,
+                    "HTML"
+                );
+            } else if (isset($media['gif'])) {
+                $this->bot->sendAnimation(
+                    $chatId,
+                    $media['gif'],
+                    null,
+                    $text,
+                    null,
+                    $keyboard,
+                    false,
+                    "HTML"
+                );
+            } else if (isset($media['document'])) {
+                $this->bot->sendDocument(
+                    $chatId,
+                    $media['document'],
+                    $text,
+                    null,
+                    $keyboard,
+                    false,
+                    "HTML"
+                );
+            } else if (empty($media)) {
+                $this->bot->sendMessage(
+                    $chatId,
+                    $text,
+                    "HTML",
+                    $this->message->getPreview(),
+                    null,
+                    $keyboard
+                );
             }
-
             return true;
         } catch (\Exception $e) {
-            error_log("[ERROR] Failed to send message: " . $e->getMessage());
+            error_log("[ERROR] error when sending message chatId: $chatId. Error: " . $e->getMessage());
             return false;
         }
     }
@@ -277,8 +360,7 @@ class View
     public function show(
         $message = [],
         $keyboard = [],
-        $media = [],
-        $tryToEdit = true
+        $media = []
     ): bool {
         $context = $this->getMessageContext();
 
@@ -286,24 +368,24 @@ class View
             return false;
         }
 
-        if ($context['callback'] && !$this->handleCallback($context)) {
-            return false;
-        }
-
         $this->configure();
+
         $text = $this->prepareMessageText($message);
+
         $keyboardMarkup = $this->buildKeyboard($keyboard, $context['callback']);
 
-        if ($this->message->getType() === 'send') {
-            $isInline = $keyboardMarkup instanceof InlineKeyboardMarkup;
+        if ($context['callback']) {
+            $this->handleCallback($context);
+        }
 
-            if ($tryToEdit && $isInline && $this->canEditMessage($context, $keyboardMarkup)) {
+        if ($this->message->getType() === 'send') {
+            if ($this->canEditMessage($context, $keyboardMarkup)) {
                 if ($this->tryEditMessage($context, $text, $keyboardMarkup, $media)) {
                     return true;
                 }
             }
 
-            if ($tryToEdit && $context['callback'] && $this->shouldDeleteMessage($context)) {
+            if ($context['callback'] && $this->shouldDeleteMessage($context)) {
                 $this->tryDeleteMessage($context);
             }
 
