@@ -22,7 +22,7 @@
             return $this;
         }
 
-        public function singleton(string $id, object $instance) {
+        public function singleton(string $id, object|array $instance) {
             $this->bindings[$id] = $instance;
 
             return $this;
