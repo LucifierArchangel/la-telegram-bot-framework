@@ -25,6 +25,7 @@ class BotRouter extends Middleware
         'callback'           => [],
         'media'              => [],
         'pre_checkout_query' => [],
+        'successful_payment' => [],
         'my_chat_member'     => [],
         'chatJoinRequest'    => [],
         'contact'            => []
@@ -251,6 +252,11 @@ class BotRouter extends Middleware
         $this->addRouter('pre_checkout_query', '', $action);
     }
 
+    public function successfulPayment(array $action): void
+    {
+        $this->addRouter('successful_payment', '', $action);
+    }
+
     /**
      * Add new myChatMember handler
      *
@@ -420,9 +426,29 @@ class BotRouter extends Middleware
             case 'command':
                 $this->processCommandUpdate($instance, $bot, $update, $data);
                 break;
+            case 'successful_payment':
+                $this->processSuccessfulPaymentUpdate($instance, $bot, $update);
+                break;
             default:
                 $this->processDefaultUpdate($instance, $bot, $update, $type, $data);
                 break;
+        }
+    }
+
+    /**
+     * Process successful payment update
+     *
+     * @param mixed $instance instance of the container
+     * @param Client $bot current bot instance
+     * @param Update $update current update instance
+     * @return void
+     */
+    private function processSuccessfulPaymentUpdate(mixed $instance, Client $bot, Update $update): void
+    {
+        if (!empty($this->compiledRouters['successful_payment'])) {
+            $this->executeRoute($instance, [
+                'action' => $this->compiledRouters['successful_payment']['']
+            ], $bot, $update);
         }
     }
 
@@ -624,6 +650,9 @@ class BotRouter extends Middleware
             return 'chatJoinRequest';
         }
         if ($message) {
+            if ($message->getSuccessfulPayment()) {
+                return 'successful_payment';
+            }
             if ($message->getContact()) {
                 return 'contact';
             }
