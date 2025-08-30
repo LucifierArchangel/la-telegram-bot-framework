@@ -2,6 +2,7 @@
 
 namespace Lucifier\Framework\Core\Database;
 
+use Couchbase\QueryException;
 use Exception;
 use Lucifier\Framework\Utils\Logger\FileLogger;
 use mysqli;
@@ -66,7 +67,8 @@ class DB implements IDatabase
         string  $user,
         string  $password,
         string  $name,
-        ?string $port = null
+        ?string $port = null,
+        bool    $persistent = true
     ): void {
         $this->server = $server;
         $this->user = $user;
@@ -74,16 +76,14 @@ class DB implements IDatabase
         $this->database = $name;
         $this->port = $port;
 
-        $this->connection = mysqli_connect(
-            $this->server,
-            $this->user,
-            $this->password,
-            $this->database = $name,
-            $this->port
-        );
+        $host = $persistent ? "p:$server" : $server;
+        $this->connection = mysqli_connect($host, $this->user, $this->password, $name, $this->port);
+
+        if (!$this->connection) {
+            throw new QueryException("Connection failed: " . mysqli_connect_error());
+        }
 
         $this->dbName = $name;
-
         mysqli_query($this->connection, "SET NAMES utf8mb4");
     }
 
