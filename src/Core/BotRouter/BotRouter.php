@@ -575,13 +575,11 @@ class BotRouter extends Middleware
      */
     private function processCommandUpdate(mixed $instance, Client $bot, Update $update, string $data): void
     {
-        if (strpos($data, 'start') === 0) {
-            $arguments = $this->extractCommandArguments($data);
-            if (isset($this->compiledRouters['command']['start'])) {
-                $this->executeRoute($instance, [
-                    'action' => $this->compiledRouters['command']['start']
-                ], $bot, $update, $arguments);
-            }
+        $arguments = $this->extractCommandArguments($data);
+        if (isset($this->compiledRouters['command'][$data])) {
+            $this->executeRoute($instance, [
+                'action' => $this->compiledRouters['command'][$data]
+            ], $bot, $update, $arguments);
         }
     }
 
