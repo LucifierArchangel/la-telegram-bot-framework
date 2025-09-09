@@ -575,12 +575,37 @@ class BotRouter extends Middleware
      */
     private function processCommandUpdate(mixed $instance, Client $bot, Update $update, string $data): void
     {
-        $arguments = $this->extractCommandArguments($data);
-        if (isset($this->compiledRouters['command'][$data])) {
+
+        $commandData = $this->parseCommand($data);
+
+        $command = $commandData['command'];
+        $arguments = $commandData['arguments'];
+
+        if (isset($this->compiledRouters['command'][$command])) {
             $this->executeRoute($instance, [
-                'action' => $this->compiledRouters['command'][$data]
+                'action' => $this->compiledRouters['command'][$command]
             ], $bot, $update, $arguments);
         }
+    }
+
+
+    private function parseCommand(string $commandText): array
+    {
+        $commandText = ltrim($commandText, '/');
+
+        if (strpos($commandText, '=') !== false) {
+            [$command, $argumentString] = explode('=', $commandText, 2);
+            $arguments = $argumentString ? [$argumentString] : [];
+        } else {
+            $parts = explode(' ', $commandText);
+            $command = array_shift($parts);
+            $arguments = $parts;
+        }
+
+        return [
+            'command' => $command,
+            'arguments' => $arguments
+        ];
     }
 
     /**
