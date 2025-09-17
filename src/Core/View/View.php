@@ -49,6 +49,7 @@ class View
 
         if (isset($currentMessage)) {
             $chatId = $currentMessage->getChat()->getId();
+            $msgId = $currentMessage->getMessageId();
         } else {
             $callback = true;
             $currentMessage = $this->update->getCallbackQuery();
@@ -199,6 +200,7 @@ class View
                 }
 
                 error_log("[ERROR] Failed to create media object");
+                return false;
             } elseif ($text !== null) {
                 $this->bot->editMessageText(
                     $chatId,
@@ -218,8 +220,34 @@ class View
                 return true;
             }
         } catch (\Exception $exception) {
-            error_log("[ERROR] error when editing message ID: $msgId in chat: $chatId. Error: "
-                . $exception->getMessage());
+            $errorMsg = $exception->getMessage();
+
+            if (strpos($errorMsg, 'there is no text in the message to edit') !== false) {
+                error_log("[DEBUG] Попытка отредактировать сообщение без изменений текста");
+                return true;
+            }
+
+            if (strpos($errorMsg, 'message is not modified') !== false) {
+                error_log("[DEBUG] Сообщение не было изменено - контент идентичен");
+                return true;
+            }
+
+            if (strpos($errorMsg, 'exactly the same') !== false) {
+                error_log("[DEBUG] Контент сообщения полностью идентичен");
+                return true;
+            }
+
+            if (strpos($errorMsg, 'message to edit not found') !== false) {
+                error_log("[DEBUG] Сообщение для редактирования не найдено - возможно уже удалено");
+                return false;
+            }
+
+            if (strpos($errorMsg, "can't edit this message") !== false) {
+                error_log("[DEBUG] Невозможно отредактировать это сообщение");
+                return false;
+            }
+
+            error_log("[ERROR] error when editing message ID: $msgId in chat: $chatId. Error: " . $errorMsg);
             error_log("[DEBUG] Exception trace: " . $exception->getTraceAsString());
         }
 
@@ -245,7 +273,12 @@ class View
     protected function getBotInfo()
     {
         if (!isset($this->botCache['me'])) {
-            $this->botCache['me'] = $this->bot->getMe();
+            try {
+                $this->botCache['me'] = $this->bot->getMe();
+            } catch (\Exception $e) {
+                error_log("[ERROR] Не удалось получить информацию о боте: " . $e->getMessage());
+                return null;
+            }
         }
         return $this->botCache['me'];
     }
@@ -256,36 +289,67 @@ class View
         $msgId = $context['msgId'];
 
         try {
-            $me = $this->getBotInfo();
-            $chatMember = $this->bot->getChatMember($chatId, $me->getId());
-
             $messageTime = $context['currentMessage']->getMessage()?->getDate();
             if (!$messageTime) {
+                error_log("[DEBUG] Не удалось получить время сообщения для удаления");
                 return false;
             }
 
             $messageAge = time() - $messageTime;
 
-            if ($messageAge < self::MAX_MESSAGE_AGE &&
-                ($chatMember->getStatus() === 'administrator' || $chatMember->getStatus() === 'creator')
-            ) {
+            if ($messageAge >= self::MAX_MESSAGE_AGE) {
+                $this->isDeleted = false;
+                error_log("[DEBUG] Сообщение ID: $msgId слишком старое для удаления (возраст: $messageAge секунд)");
+                return false;
+            }
+
+            $chat = $this->bot->getChat($chatId);
+            $chatType = $chat->getType();
+
+            if ($chatType === 'private') {
                 $this->bot->deleteMessage($chatId, $msgId);
                 return true;
-            } else {
-                $this->isDeleted = false;
-                if ($messageAge >= self::MAX_MESSAGE_AGE) {
-                    error_log("[INFO] Message ID: $msgId is too old to delete (age: $messageAge seconds)");
+            }
+
+            if (in_array($chatType, ['group', 'supergroup'])) {
+                $me = $this->getBotInfo();
+                if (!$me) {
+                    return false;
+                }
+
+                $chatMember = $this->bot->getChatMember($chatId, $me->getId());
+
+                if ($chatMember->getStatus() === 'administrator' || $chatMember->getStatus() === 'creator') {
+                    $this->bot->deleteMessage($chatId, $msgId);
+                    return true;
                 } else {
-                    error_log("[INFO] Bot doesn't have permission to delete messages in chat $chatId");
+                    $this->isDeleted = false;
+                    error_log("[DEBUG] У бота нет прав администратора в групповом чате $chatId");
+                    return false;
                 }
             }
-        } catch (\Exception $exception) {
-            error_log("[ERROR] error when deleting message ID: $msgId in chat: $chatId. Error: "
-                . $exception->getMessage());
-            $this->isDeleted = false;
-        }
 
-        return false;
+            $this->bot->deleteMessage($chatId, $msgId);
+            return true;
+
+        } catch (\Exception $exception) {
+            $errorMessage = $exception->getMessage();
+
+            if (strpos($errorMessage, "can't delete this message") !== false ||
+                strpos($errorMessage, "message to delete not found") !== false ||
+                strpos($errorMessage, "message can't be deleted") !== false ||
+                strpos($errorMessage, "doesn't have permission") !== false ||
+                strpos($errorMessage, "not enough rights") !== false) {
+
+                error_log("[DEBUG] Не удалось удалить сообщение ID: $msgId в чате: $chatId - это ожидаемо");
+                $this->isDeleted = false;
+                return false;
+            }
+
+            error_log("[ERROR] Неожиданная ошибка при удалении сообщения ID: $msgId в чате: $chatId. Ошибка: " . $errorMessage);
+            $this->isDeleted = false;
+            return false;
+        }
     }
 
     protected function sendNewMessage(array $context, ?string $text, $keyboard, array $media): bool
