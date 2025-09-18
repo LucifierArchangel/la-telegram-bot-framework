@@ -185,10 +185,8 @@ class View
 
         try {
             if (!empty($media)) {
-
                 $inputMedia = $this->createMediaObject($media, $text);
                 if ($inputMedia) {
-
                     $this->bot->editMessageMedia(
                         $chatId,
                         $msgId,
@@ -201,16 +199,34 @@ class View
 
                 error_log("[ERROR] Failed to create media object");
                 return false;
-            } elseif ($text !== null) {
-                $this->bot->editMessageText(
-                    $chatId,
-                    $msgId,
-                    $text,
-                    'HTML',
-                    $this->message->getPreview(),
-                    $keyboard
-                );
-                return true;
+            }
+
+            if ($text !== null) {
+                $currentMessage = $context['callback']
+                    ? $context['currentMessage']->getMessage()
+                    : $context['currentMessage'];
+
+                $hasMedia = $currentMessage && (
+                        $currentMessage->getPhoto() ||
+                        $currentMessage->getVideo() ||
+                        $currentMessage->getDocument() ||
+                        $currentMessage->getAnimation()
+                    );
+
+                if ($hasMedia) {
+                    error_log("[DEBUG] Попытка удалить медиа из сообщения через editMessageText не поддерживается");
+                    return false;
+                } else {
+                    $this->bot->editMessageText(
+                        $chatId,
+                        $msgId,
+                        $text,
+                        'HTML',
+                        $this->message->getPreview(),
+                        $keyboard
+                    );
+                    return true;
+                }
             } else {
                 $this->bot->editMessageReplyMarkup(
                     $chatId,
@@ -223,8 +239,8 @@ class View
             $errorMsg = $exception->getMessage();
 
             if (strpos($errorMsg, 'there is no text in the message to edit') !== false) {
-                error_log("[DEBUG] Попытка отредактировать сообщение без изменений текста");
-                return true;
+                error_log("[DEBUG] Попытка отредактировать сообщение без текста - в сообщении есть только медиа");
+                return false;
             }
 
             if (strpos($errorMsg, 'message is not modified') !== false) {
