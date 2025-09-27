@@ -93,7 +93,7 @@ class View
         return $text;
     }
 
-    protected function buildKeyboard(array $keyboardParams, bool $isCallback)
+    protected function buildKeyboard(array $keyboardParams, bool $isCallback, bool $isEditingMessage = false)
     {
         if (!isset($this->keyboard)) {
             return null;
@@ -105,6 +105,7 @@ class View
         if (
             $isCallback
             && $keyboardType !== 'inline'
+            && $isEditingMessage
         ) {
             return null;
         }
@@ -483,7 +484,9 @@ class View
 
         $text = $this->prepareMessageText($message);
 
-        $keyboardMarkup = $this->buildKeyboard($keyboard, $context['callback']);
+        $willEditMessage = !$shouldForceNew && $this->canEditMessage($context, null);
+
+        $keyboardMarkup = $this->buildKeyboard($keyboard, $context['callback'], $willEditMessage);
 
         if ($context['callback']) {
             $this->handleCallback($context);
