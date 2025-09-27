@@ -27,17 +27,37 @@ class View
 
     protected array $botCache = [];
 
+    protected bool $forceNew = false;
+
     private const MAX_MESSAGE_AGE = 172800;
 
-    public function __construct(Update $update, Client $bot)
+    public function __construct(Update $update, Client $bot, $forceNew = false)
     {
         $this->update = $update;
         $this->bot = $bot;
+        $this->forceNew = $forceNew;
     }
 
     public function configure()
     {
 
+    }
+
+    /**
+     * Установить флаг принудительной отправки нового сообщения
+     */
+    public function setForceNew(bool $forceNew): self
+    {
+        $this->forceNew = $forceNew;
+        return $this;
+    }
+
+    /**
+     * Получить флаг принудительной отправки нового сообщения
+     */
+    public function isForceNew(): bool
+    {
+        return $this->forceNew;
     }
 
     protected function getMessageContext(): array
@@ -272,6 +292,10 @@ class View
 
     protected function canEditMessage(array $context, $keyboard): bool
     {
+        if ($this->forceNew) {
+            return false;
+        }
+
         return $context['callback'] &&
             isset($this->keyboard) &&
             $this->keyboard->getType() === 'inline' &&
@@ -281,6 +305,10 @@ class View
 
     protected function shouldDeleteMessage(array $context): bool
     {
+        if ($this->forceNew) {
+            return false;
+        }
+
         return $this->isDeleted === true &&
             is_int($context['msgId']) &&
             !empty($context['chatId']);
@@ -440,13 +468,16 @@ class View
     public function show(
         $message = [],
         $keyboard = [],
-        $media = []
+        $media = [],
+        $forceNew = null
     ): bool {
         $context = $this->getMessageContext();
 
         if (empty($context['chatId'])) {
             return false;
         }
+
+        $shouldForceNew = $forceNew !== null ? $forceNew : $this->forceNew;
 
         $this->configure();
 
@@ -459,14 +490,16 @@ class View
         }
 
         if ($this->message->getType() === 'send') {
-            if ($this->canEditMessage($context, $keyboardMarkup)) {
-                if ($this->tryEditMessage($context, $text, $keyboardMarkup, $media)) {
-                    return true;
+            if (!$shouldForceNew) {
+                if ($this->canEditMessage($context, $keyboardMarkup)) {
+                    if ($this->tryEditMessage($context, $text, $keyboardMarkup, $media)) {
+                        return true;
+                    }
                 }
-            }
 
-            if ($context['callback'] && $this->shouldDeleteMessage($context)) {
-                $this->tryDeleteMessage($context);
+                if ($context['callback'] && $this->shouldDeleteMessage($context)) {
+                    $this->tryDeleteMessage($context);
+                }
             }
 
             return $this->sendNewMessage($context, $text, $keyboardMarkup, $media);
